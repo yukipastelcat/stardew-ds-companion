@@ -17,6 +17,17 @@ import '../theme/stardew_colors.dart';
 /// of drawing a border on top — no fabricated highlight color. The
 /// item sprite itself also grows to nearly fill the slot (thinner
 /// padding) once selected, animated over a short duration.
+///
+/// Two more real-game touches: a quality star badge (silver/gold/
+/// iridium — `Object.drawInMenu`'s own icon, cropped by the mod's
+/// `UiIconCache`) in the slot's bottom-left corner for anything with
+/// [InventoryItem.quality] set, and — for a stabbing/defense sword
+/// still recovering from a block — the same red "reloading" wipe
+/// vanilla's own `MeleeWeapon.drawInMenu` draws over the icon
+/// (`Color.Red` at 66% opacity, anchored to the bottom edge and
+/// shrinking upward as [InventoryItem.cooldownFraction] counts down to
+/// 0), reproduced here as a plain color overlay rather than a sprite
+/// since that's what the real effect actually is.
 class InventorySlot extends StatelessWidget {
   const InventorySlot({
     super.key,
@@ -27,6 +38,7 @@ class InventorySlot extends StatelessWidget {
     this.frameUrl,
     this.selectedFrameUrl,
     this.lockedOverlayUrl,
+    this.qualityStarUrl,
     this.onTap,
   });
 
@@ -52,6 +64,9 @@ class InventorySlot extends StatelessWidget {
   /// Real in-game locked-row overlay (`GameConnectionService.slotLockedOverlayUrl`).
   final String? lockedOverlayUrl;
 
+  /// Real in-game quality star badge for [item] (`GameConnectionService.qualityStarUrl`) — null when [item] has no quality (or is locked/empty).
+  final String? qualityStarUrl;
+
   final VoidCallback? onTap;
 
   /// Padding around the item sprite in a normal (unselected) slot —
@@ -63,6 +78,17 @@ class InventorySlot extends StatelessWidget {
   /// echoing the vanilla game's own enlarged look for the equipped
   /// hotbar item.
   static const double _selectedSpritePadding = 1;
+
+  /// Inset of the quality star badge from the slot's bottom-left corner
+  /// — mirrors [_StackCountText]'s bottom-right inset (`bottom: 1, right: 3`)
+  /// so the two badges read as a matched pair.
+  static const double _qualityBadgeInset = 2;
+
+  /// Rendered size of the quality star badge — the real sprite is a
+  /// native 8x8 crop; scaled up slightly (nearest-neighbor, no blur) so
+  /// it stays legible at the app's much larger slot size than vanilla's
+  /// own ~64px inventory menu.
+  static const double _qualityBadgeSize = 12;
 
   static const _fallbackFrameDecoration = BoxDecoration(
     color: StardewColors.slotFill,
@@ -101,6 +127,11 @@ class InventorySlot extends StatelessWidget {
                   padding: EdgeInsets.all(selected ? _selectedSpritePadding : _spritePadding),
                   child: _sprite(),
                 ),
+              if (!locked && (item?.cooldownFraction ?? 0) > 0)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: _CooldownWipe(fraction: item!.cooldownFraction!),
+                ),
               if (!locked && (item?.quantity ?? 0) > 1)
                 Positioned(
                   bottom: 1,
@@ -122,6 +153,19 @@ class InventorySlot extends StatelessWidget {
                         valueColor: const AlwaysStoppedAnimation(Color(0xFF4FA3D1)),
                       ),
                     ),
+                  ),
+                ),
+              if (!locked && item != null && qualityStarUrl != null)
+                Positioned(
+                  bottom: _qualityBadgeInset,
+                  left: _qualityBadgeInset,
+                  width: _qualityBadgeSize,
+                  height: _qualityBadgeSize,
+                  child: Image.network(
+                    qualityStarUrl!,
+                    fit: BoxFit.contain,
+                    filterQuality: FilterQuality.none,
+                    errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
                   ),
                 ),
             ],
@@ -172,6 +216,37 @@ class InventorySlot extends StatelessWidget {
       fit: BoxFit.contain,
       filterQuality: FilterQuality.none,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+    );
+  }
+}
+
+/// The real vanilla "reloading" cooldown overlay a stabbing/defense
+/// sword's own `drawInMenu` draws while its block special is
+/// recovering: a translucent red rectangle anchored to the slot's
+/// bottom edge, sized to [fraction] of the slot's full height (1 = just
+/// blocked, covering the whole icon; shrinking toward 0 as the real
+/// vanilla `defenseCooldown` timer counts down), so the icon gets
+/// visibly "uncovered" from the top down as the weapon becomes usable
+/// again — the exact same math as `Game1.staminaRect` drawn at
+/// `Color.Red * 0.66f`, just as a solid color box instead of a 1x1
+/// tinted texture (there's no sprite to crop here — the real effect
+/// already is a flat color fill).
+class _CooldownWipe extends StatelessWidget {
+  const _CooldownWipe({required this.fraction});
+
+  /// 0-1; already clamped by the mod before it reaches the app, but
+  /// clamped again here defensively since this drives a layout size.
+  final double fraction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: FractionallySizedBox(
+        heightFactor: fraction.clamp(0.0, 1.0),
+        widthFactor: 1.0,
+        child: const ColoredBox(color: Color(0xA8FF0000)), // Color.Red @ ~66% alpha
+      ),
     );
   }
 }

@@ -305,6 +305,22 @@ class GameConnectionService extends ChangeNotifier {
   /// icon code. Null when not connected.
   String? weatherIconUrl(int weatherIconCode) => _numberedIconUrl('weather-icon', weatherIconCode);
 
+  /// URL for the real vanilla item-quality star badge matching
+  /// [quality] (1=silver, 2=gold, 4=iridium — see
+  /// `InventoryItem.quality`'s doc comment), cropped from the game's own
+  /// Cursors sheet (`UiIconCache.cs`). Null for quality 0 (no badge —
+  /// vanilla draws nothing for normal-quality items either) or when not
+  /// connected.
+  String? qualityStarUrl(int quality) {
+    final name = switch (quality) {
+      1 => 'quality-silver',
+      2 => 'quality-gold',
+      4 => 'quality-iridium',
+      _ => null,
+    };
+    return name == null ? null : iconUrl(name);
+  }
+
   String? _numberedIconUrl(String path, int n) {
     if (_host == null) return null;
     return Uri(

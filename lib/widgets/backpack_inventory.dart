@@ -180,6 +180,7 @@ class BackpackInventory extends StatelessWidget {
               frameUrl: frameUrl,
               selectedFrameUrl: selectedFrameUrl,
               lockedOverlayUrl: lockedOverlayUrl,
+              qualityStarUrl: item != null ? connection.qualityStarUrl(item.quality) : null,
               onTap: locked ? null : () => connection.selectSlot(index),
               onMove: locked ? null : connection.moveItem,
             );
