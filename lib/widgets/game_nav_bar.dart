@@ -93,7 +93,7 @@ class _GameNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconUrl = destination.iconUrl;
-    final fg = selected ? StardewColors.textBrown : StardewColors.parchment;
+    final fg = selected ? StardewColors.accentRed : StardewColors.textBrown;
 
     return Semantics(
       button: true,

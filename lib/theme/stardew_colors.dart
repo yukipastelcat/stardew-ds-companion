@@ -16,4 +16,5 @@ class StardewColors {
   static const hotbarTint = Color(0xFFFFE49C);
   static const textBrown = Color(0xFF4A2E12);
   static const accentGreen = Color(0xFF71B237);
+  static const accentRed = Color(0xFFAF050E);
 }

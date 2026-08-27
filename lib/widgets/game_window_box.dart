@@ -2,6 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../theme/stardew_colors.dart';
 
+/// Padding CompanionScreen's outer [GameWindowBox] uses around all its
+/// tab content (see `CompanionScreen.build`). Exposed here, rather than
+/// left as a private literal at that call site, because
+/// `BackpackInventory`'s toolbar row deliberately breaks out of this
+/// exact inset to sit flush against the box's true bottom edge instead
+/// of respecting it like the rest of the tab content does — see
+/// `BackpackInventory.build`'s doc comment.
+const double kCompanionBoxPadding = 24.0;
+
 /// A panel wrapper styled after the vanilla game's own 9-slice menu
 /// window border (see `GameConnectionService.windowBorderUrl` /
 /// `WindowBorderCache.cs` on the mod side) — the same ornate wood-carved

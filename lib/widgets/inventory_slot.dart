@@ -14,7 +14,9 @@ import '../theme/stardew_colors.dart';
 /// hotbar's own highlighted-slot frame (`GameConnectionService.
 /// slotSelectedFrameUrl` — tile 56 on `Game1.menuTexture`, in place of
 /// the normal tile-10 frame, exactly how `Toolbar.draw` does it) instead
-/// of drawing a border on top — no fabricated highlight color.
+/// of drawing a border on top — no fabricated highlight color. The
+/// item sprite itself also grows to nearly fill the slot (thinner
+/// padding) once selected, animated over a short duration.
 class InventorySlot extends StatelessWidget {
   const InventorySlot({
     super.key,
@@ -52,6 +54,16 @@ class InventorySlot extends StatelessWidget {
 
   final VoidCallback? onTap;
 
+  /// Padding around the item sprite in a normal (unselected) slot —
+  /// leaves room for the frame's own border art.
+  static const double _spritePadding = 5;
+
+  /// Padding around the item sprite when this slot is [selected] — 1px
+  /// per side, so the sprite renders at exactly the slot size minus 2px,
+  /// echoing the vanilla game's own enlarged look for the equipped
+  /// hotbar item.
+  static const double _selectedSpritePadding = 1;
+
   static const _fallbackFrameDecoration = BoxDecoration(
     color: StardewColors.slotFill,
     border: Border.fromBorderSide(BorderSide(color: StardewColors.slotBorder, width: 2)),
@@ -83,8 +95,10 @@ class InventorySlot extends StatelessWidget {
               if (locked)
                 Opacity(opacity: 0.5, child: _lockedOverlay()),
               if (!locked && item != null)
-                Padding(
-                  padding: const EdgeInsets.all(5),
+                AnimatedPadding(
+                  duration: const Duration(milliseconds: 120),
+                  curve: Curves.easeOut,
+                  padding: EdgeInsets.all(selected ? _selectedSpritePadding : _spritePadding),
                   child: _sprite(),
                 ),
               if (!locked && (item?.quantity ?? 0) > 1)

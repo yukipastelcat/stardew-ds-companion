@@ -4,11 +4,11 @@ import '../services/game_connection_service.dart';
 import '../widgets/game_nav_bar.dart';
 import '../widgets/game_window_box.dart';
 import 'companion/backpack_screen.dart';
-import 'companion/crafting_screen.dart';
+import 'companion/journal_screen.dart';
 import 'companion/map_screen.dart';
 
 /// Shown on the home screen once the app is connected to the game.
-/// Hosts the Backpack/Map/Crafting tabs behind a game-styled bottom
+/// Hosts the Backpack/Map/Journal tabs behind a game-styled bottom
 /// navigation bar — one in-game window border (`GameWindowBox`, same
 /// as the Backpack panel) framing three flush, even-width tabs, each
 /// with the real in-game icon (cropped by the mod's `UiIconCache` —
@@ -28,7 +28,7 @@ class _CompanionScreenState extends State<CompanionScreen> {
   List<Widget> get _screens => [
         BackpackScreen(connection: widget.connection),
         const MapScreen(),
-        const CraftingScreen(),
+        const JournalScreen(),
       ];
 
   @override
@@ -36,7 +36,7 @@ class _CompanionScreenState extends State<CompanionScreen> {
     return Scaffold(
       body: GameWindowBox(
         borderUrl: widget.connection.windowBorderUrl,
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(kCompanionBoxPadding),
         child: SafeArea(bottom: false, child: _screens[_selectedIndex]),
       ),
       bottomNavigationBar: GameNavBar(
@@ -55,9 +55,9 @@ class _CompanionScreenState extends State<CompanionScreen> {
             iconUrl: widget.connection.iconUrl('map'),
           ),
           GameNavDestination(
-            label: 'Crafting',
-            fallbackIcon: Icons.construction,
-            iconUrl: widget.connection.iconUrl('crafting'),
+            label: 'Journal',
+            fallbackIcon: Icons.menu_book,
+            iconUrl: widget.connection.iconUrl('skills'),
           ),
         ],
       ),
