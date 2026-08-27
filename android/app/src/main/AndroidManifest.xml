@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Needed at runtime (not just for Flutter tooling) since the app talks to
+         the SMAPI mod's local HTTP/WebSocket server. flutter create only puts this
+         permission in the debug/profile manifests by default, which is enough for
+         `flutter run` but silently breaks all networking in a release build. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="companion"
         android:name="${applicationName}"
