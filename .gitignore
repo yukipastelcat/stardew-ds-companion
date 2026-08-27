@@ -117,3 +117,8 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+# IntelliJ/Android Studio related (VS Code files are kept)
+*.iml
+*.ipr
+*.iws
+.idea/
