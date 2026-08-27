@@ -15,6 +15,18 @@ class StardewDSApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'StardewDS Companion',
+      // Sizes throughout this app (slotSize, kCompanionBoxPadding,
+      // sprite crops, the clock's aspect box, etc.) are density-
+      // independent pixels (dp) — Flutter's default logical-pixel
+      // space, which the framework already scales against the real
+      // device's devicePixelRatio automatically. No MediaQuery
+      // override here: forcing devicePixelRatio to 1.0 would make
+      // logical pixels equal raw physical pixels instead (~1240x1080
+      // on the AYN Thor's screen), which doesn't match the ~1078x939dp
+      // canvas this layout was actually tuned against (originally
+      // tested at 355x315dp — see the compact-breakpoint math in
+      // BackpackInventory.resolveLayout) and isn't what "density-
+      // independent" sizing means.
       // Pixelify Sans: an open-license pixel-style stand-in for the
       // game's own font (which isn't redistributable — see
       // project memory `mod_companion_api.md`). Applied to the whole

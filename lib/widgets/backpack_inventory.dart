@@ -29,9 +29,21 @@ const _compactColumns = 9;
 const _compactRows = 4;
 
 /// Below this slot size (px), the wide 12-column layout is considered
-/// too cramped and the grid reflows to the compact 6-column layout
+/// too cramped and the grid reflows to the compact 9-column layout
 /// instead.
-const _compactBreakpoint = 36.0;
+///
+/// Round 23: doubled from 36 to 72 (user request — "make the minimum
+/// slot size twice as big") to push the reflow trigger higher, so slots
+/// stay larger/more touch-friendly before the grid switches layouts.
+/// On the real AYN Thor screen (1240x1080 @ 1.15 ratio, no
+/// devicePixelRatio override — see companion_app_ui.md's "Target
+/// hardware" note) the wide layout still resolves to ~82dp slots,
+/// comfortably above even this doubled threshold, so this doesn't
+/// change anything on the actual device today — it only shifts where
+/// the reflow kicks in for smaller windows (e.g. the 355x315dp window
+/// the app was originally tested on, which relies on the compact
+/// layout).
+const _compactBreakpoint = 72.0;
 
 /// The Backpack screen's slot grid: the game's own window border sits
 /// one level up now (`CompanionScreen`'s outer `GameWindowBox`), so this

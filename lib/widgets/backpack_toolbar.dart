@@ -183,7 +183,7 @@ class _FarmSummary extends StatelessWidget {
       fontWeight: FontWeight.w700,
       color: StardewColors.parchment,
     );
-    final lineStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 0.75);
+    final lineStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.0);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -361,6 +361,8 @@ class _GameClock extends StatelessWidget {
     const dateCenterFraction = Offset(183.15 / 284, 43.1 / 172);
     const timeCenterFraction = Offset(183.15 / 284, 133.61 / 172);
 
+    final clockTextStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 0.75, fontWeightDelta: 2);
+
     return SizedBox(
       width: width,
       height: height,
@@ -403,11 +405,7 @@ class _GameClock extends StatelessWidget {
                 // sits at a tiny 8px size where a fallback system font is
                 // hard to tell apart from the pixel font by eye, so the
                 // font is pinned directly instead of trusting inheritance.
-                style: GoogleFonts.pixelifySans(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w600,
-                  color: StardewColors.woodDarker,
-                ),
+                style: clockTextStyle,
               ),
             ),
           ),
@@ -418,11 +416,7 @@ class _GameClock extends StatelessWidget {
               translation: const Offset(-0.5, -0.5),
               child: Text(
                 _digital,
-                style: GoogleFonts.pixelifySans(
-                  fontSize: 8,
-                  fontWeight: FontWeight.w700,
-                  color: StardewColors.woodDarker,
-                ),
+                style: clockTextStyle,
               ),
             ),
           ),
