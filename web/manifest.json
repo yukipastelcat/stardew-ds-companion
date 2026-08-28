@@ -1,6 +1,6 @@
 {
-    "name": "companion",
-    "short_name": "companion",
+    "name": "StardewDS Companion",
+    "short_name": "StardewDS",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

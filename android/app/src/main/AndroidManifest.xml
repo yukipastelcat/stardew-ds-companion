@@ -5,7 +5,7 @@
          `flutter run` but silently breaks all networking in a release build. -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="companion"
+        android:label="StardewDS Companion"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
