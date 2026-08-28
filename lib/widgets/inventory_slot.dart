@@ -7,8 +7,9 @@ import '../theme/stardew_colors.dart';
 /// (see `GameConnectionService.slotFrameUrl`) and, for a slot beyond the
 /// player's current backpack capacity, the same darkened overlay the
 /// vanilla inventory menu composites on top at half opacity — plus the
-/// item's real sprite, a stack-count badge for stackable items, and a
-/// thin water gauge for a Watering Can.
+/// item's real sprite, a stack-count badge for stackable items, and —
+/// for a Watering Can — the real in-game water-level gauge
+/// (`WateringCan.drawInMenu`'s own frame + fill, not a fabricated bar).
 ///
 /// The currently selected/equipped slot swaps in the real vanilla
 /// hotbar's own highlighted-slot frame (`GameConnectionService.
@@ -39,6 +40,7 @@ class InventorySlot extends StatelessWidget {
     this.selectedFrameUrl,
     this.lockedOverlayUrl,
     this.qualityStarUrl,
+    this.wateringCanGaugeUrl,
     this.onTap,
   });
 
@@ -66,6 +68,13 @@ class InventorySlot extends StatelessWidget {
 
   /// Real in-game quality star badge for [item] (`GameConnectionService.qualityStarUrl`) — null when [item] has no quality (or is locked/empty).
   final String? qualityStarUrl;
+
+  /// Real in-game watering-can water-gauge frame (`GameConnectionService.wateringCanGaugeUrl`)
+  /// — the exact crop `WateringCan.drawInMenu` draws behind its own
+  /// water-level fill. Only ever shown when [item] reports a
+  /// [InventoryItem.waterFraction]; the fill bar itself is drawn as a
+  /// plain solid color, not a second sprite (see `_WaterGauge`).
+  final String? wateringCanGaugeUrl;
 
   final VoidCallback? onTap;
 
@@ -139,20 +148,11 @@ class InventorySlot extends StatelessWidget {
                   child: _StackCountText('${item!.quantity}'),
                 ),
               if (!locked && item?.waterFraction != null)
-                Positioned(
-                  left: 3,
-                  right: 3,
-                  bottom: 2,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: SizedBox(
-                      height: 3,
-                      child: LinearProgressIndicator(
-                        value: item!.waterFraction,
-                        backgroundColor: StardewColors.woodDark.withOpacity(0.4),
-                        valueColor: const AlwaysStoppedAnimation(Color(0xFF4FA3D1)),
-                      ),
-                    ),
+                Positioned.fill(
+                  child: _WaterGauge(
+                    fraction: item!.waterFraction!,
+                    isBottomless: item!.waterCanIsBottomless,
+                    frameUrl: wateringCanGaugeUrl,
                   ),
                 ),
               if (!locked && item != null && qualityStarUrl != null)
@@ -269,6 +269,92 @@ class _StackCountText extends StatelessWidget {
         color: Colors.white,
         shadows: [Shadow(color: Colors.black87, offset: Offset(1, 1))],
       ),
+    );
+  }
+}
+
+/// The real vanilla watering-can water-level gauge: a small frame
+/// (`GameConnectionService.wateringCanGaugeUrl` — the exact 14x5 crop
+/// `WateringCan.drawInMenu` draws from `Game1.mouseCursors` at
+/// `Rectangle(297, 420, 14, 5)`, verified against decompiled
+/// `WateringCan.cs` before writing) with a solid-color fill bar drawn
+/// inside it, sized to [fraction] of the frame's own inner width — same
+/// approach vanilla itself uses (`Game1.staminaRect`, a 1x1 texture
+/// stretched to a Rectangle, not a second sprite). Colored DodgerBlue
+/// at 70% opacity normally, or BlueViolet at full opacity for an
+/// enchanted bottomless can ([isBottomless]) — [WateringCan.drawInMenu]'s
+/// own two-color choice.
+///
+/// Positioned at the same fractions of the slot vanilla's own 64px
+/// reference `drawInMenu` call uses (frame at `location + (4,44)` sized
+/// 56x20; fill at `location + (8,48)` sized up to 48x8), scaled here to
+/// whatever pixel size this slot actually renders at via [LayoutBuilder]
+/// — the same "position at a fraction of the box" approach already used
+/// for the clock's date/time text and the map screen's player marker.
+class _WaterGauge extends StatelessWidget {
+  const _WaterGauge({
+    required this.fraction,
+    required this.isBottomless,
+    this.frameUrl,
+  });
+
+  /// 0-1 fraction of the can's water capacity remaining.
+  final double fraction;
+
+  /// True for an enchanted bottomless can — picks the fill color.
+  final bool isBottomless;
+
+  /// Real in-game gauge frame/background; null shows just the fill.
+  final String? frameUrl;
+
+  // Vanilla reference: a 64x64 inventory slot, per `WateringCan.
+  // drawInMenu`'s own hardcoded offsets/sizes.
+  static const double _refSlot = 64;
+  static const double _frameLeft = 4 / _refSlot;
+  static const double _frameTop = 44 / _refSlot;
+  static const double _frameWidth = 56 / _refSlot;
+  static const double _frameHeight = 20 / _refSlot;
+  static const double _fillLeft = 8 / _refSlot;
+  static const double _fillTop = 48 / _refSlot;
+  static const double _fillMaxWidth = 48 / _refSlot;
+  static const double _fillHeight = 8 / _refSlot;
+
+  // WateringCan.drawInMenu's own two fill colors.
+  static const Color _dodgerBlue70 = Color(0xB31E90FF); // Color.DodgerBlue @ 70% alpha
+  static const Color _blueViolet = Color(0xFF8A2BE2); // Color.BlueViolet, full alpha
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.biggest;
+        final clampedFraction = fraction.clamp(0.0, 1.0);
+        return Stack(
+          children: [
+            Positioned(
+              left: size.width * _frameLeft,
+              top: size.height * _frameTop,
+              width: size.width * _frameWidth,
+              height: size.height * _frameHeight,
+              child: frameUrl == null
+                  ? const SizedBox.shrink()
+                  : Image.network(
+                      frameUrl!,
+                      fit: BoxFit.fill,
+                      filterQuality: FilterQuality.none,
+                      errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
+                    ),
+            ),
+            Positioned(
+              left: size.width * _fillLeft,
+              top: size.height * _fillTop,
+              width: size.width * _fillMaxWidth * clampedFraction,
+              height: size.height * _fillHeight,
+              child: ColoredBox(color: isBottomless ? _blueViolet : _dodgerBlue70),
+            ),
+          ],
+        );
+      },
     );
   }
 }

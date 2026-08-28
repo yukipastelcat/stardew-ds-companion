@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/game_state.dart';
@@ -31,12 +30,11 @@ enum ConnectionStatus { disconnected, connecting, connected, error }
 /// isn't a web-only workaround (same reasoning that led to `package:http`
 /// for the POST requests).
 ///
-/// A dropped/failed socket retries after a fixed short delay
-/// ([_reconnectDelay]) for as long as [_host] is set — no exponential
-/// backoff, since a game PC that's briefly unreachable (sleep, wifi
-/// blip) should reconnect quickly once it's back, and this is a LAN
-/// connection to one fixed host, not a public service worth being gentle
-/// with.
+/// A dropped/failed socket retries forever after a fixed short delay
+/// ([_reconnectDelay]) — no exponential backoff, since a game that's
+/// briefly unreachable (still loading, save screen) should reconnect
+/// quickly once it's back, and this is a fixed localhost connection,
+/// not a public service worth being gentle with.
 class GameConnectionService extends ChangeNotifier {
   GameConnectionService({this.port = 8082});
 
@@ -50,10 +48,6 @@ class GameConnectionService extends ChangeNotifier {
   /// of backing off.
   static const _reconnectDelay = Duration(seconds: 2);
 
-  /// localStorage (via shared_preferences) key for the last host the user
-  /// connected to, so the app can reconnect automatically next launch.
-  static const _lastHostPrefsKey = 'stardewds_last_host';
-
   String? _host;
   final http.Client _client = http.Client();
 
@@ -61,10 +55,9 @@ class GameConnectionService extends ChangeNotifier {
   StreamSubscription<dynamic>? _channelSubscription;
   Timer? _reconnectTimer;
 
-  /// Bumped every time [connect]/[disconnect] runs, so a socket
-  /// event (onDone/onError) arriving after the app has already moved on
-  /// to a different host — or disconnected entirely — can tell it's
-  /// stale and ignore itself instead of clobbering the newer state.
+  /// Bumped every time [connect] runs, so a socket event (onDone/onError)
+  /// arriving after the app has already moved on can tell it's stale and
+  /// ignore itself instead of clobbering the newer state.
   int _connectionGeneration = 0;
 
   ConnectionStatus _status = ConnectionStatus.disconnected;
@@ -77,31 +70,17 @@ class GameConnectionService extends ChangeNotifier {
   String? get lastError => _lastError;
   bool get isConnected => _status == ConnectionStatus.connected;
 
-  /// Opens the `ws://<host>:<port>/ws` connection. Call [disconnect]
-  /// first if already connected to a different host. Remembers [host] so
-  /// [autoConnect] can reconnect to it automatically next launch.
-  void connect(String host) {
-    _host = host.trim();
+  /// Opens the `ws://localhost:$port/ws` connection to the mod. The mod
+  /// always runs on the same device as this app, so there's no host/IP
+  /// to configure — call this once, right after construction.
+  void connect() {
+    _host = 'localhost';
     _status = ConnectionStatus.connecting;
     _lastError = null;
     _connectionGeneration++;
     notifyListeners();
 
-    SharedPreferences.getInstance().then((prefs) => prefs.setString(_lastHostPrefsKey, _host!));
-
     _openSocket();
-  }
-
-  void disconnect() {
-    _closeSocket(); // bumps the generation, invalidating any in-flight socket event
-    _host = null;
-    _state = null;
-    _status = ConnectionStatus.disconnected;
-    notifyListeners();
-
-    // An explicit disconnect means "stop trying" — don't have the next
-    // launch immediately reconnect behind the user's back.
-    SharedPreferences.getInstance().then((prefs) => prefs.remove(_lastHostPrefsKey));
   }
 
   void _openSocket() {
@@ -154,7 +133,7 @@ class GameConnectionService extends ChangeNotifier {
     _channel = null;
 
     _status = ConnectionStatus.error;
-    _lastError = 'Could not reach $_host:$port — check the PC and phone are on the same network.';
+    _lastError = 'Could not reach the mod at localhost:$port — is the game running?';
     notifyListeners();
 
     _reconnectTimer?.cancel();
@@ -171,18 +150,6 @@ class GameConnectionService extends ChangeNotifier {
     _channelSubscription = null;
     _channel?.sink.close();
     _channel = null;
-  }
-
-  /// Reconnects to whatever host was last connected (persisted by
-  /// [connect]), if any. Call once, right after construction — a no-op if
-  /// nothing's been saved yet (first run, or after an explicit
-  /// [disconnect]).
-  Future<void> autoConnect() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedHost = prefs.getString(_lastHostPrefsKey);
-    if (savedHost != null && savedHost.isNotEmpty) {
-      connect(savedHost);
-    }
   }
 
   Uri _uri(String path) => Uri.parse('http://${_host!}:$port$path');
@@ -212,6 +179,19 @@ class GameConnectionService extends ChangeNotifier {
   String? get portraitUrl {
     if (_host == null) return null;
     return Uri(scheme: 'http', host: _host!, port: port, path: '/portrait').toString();
+  }
+
+  /// URL for the mod's `GET /mini-portrait` endpoint — a PNG of the real
+  /// vanilla head+hair-only mini portrait (see
+  /// stardew-ds-mod/MiniPortraitRenderer.cs), the exact
+  /// `FarmerRenderer.drawMiniPortrat` render the GameMenu's Skills tab
+  /// and MapPage's own player marker both use. Prefer this over
+  /// [portraitUrl] anywhere a small face-only icon is wanted —
+  /// [portraitUrl] is the full standing body and needs cropping to look
+  /// right at a small size. Null when not connected.
+  String? get miniPortraitUrl {
+    if (_host == null) return null;
+    return Uri(scheme: 'http', host: _host!, port: port, path: '/mini-portrait').toString();
   }
 
   /// URL for the real background image the vanilla inventory menu draws
@@ -283,6 +263,16 @@ class GameConnectionService extends ChangeNotifier {
     return Uri(scheme: 'http', host: _host!, port: port, path: '/clock-needle').toString();
   }
 
+  /// URL for the real vanilla world map background (see
+  /// stardew-ds-mod/WorldMapCache.cs) — the same texture the in-game map
+  /// page itself draws. Combine with `GameState.mapMarkerX`/`mapMarkerY`
+  /// (0-1 fractions of this image's own width/height) to place the
+  /// player's position marker. Null when not connected.
+  String? get worldMapUrl {
+    if (_host == null) return null;
+    return Uri(scheme: 'http', host: _host!, port: port, path: '/world-map').toString();
+  }
+
   /// URL for one of the mod's fixed UI icons ("backpack", "map",
   /// "crafting"), cropped from the game's own UI spritesheet (see
   /// stardew-ds-mod/UiIconCache.cs). Null when not connected.
@@ -320,6 +310,15 @@ class GameConnectionService extends ChangeNotifier {
     };
     return name == null ? null : iconUrl(name);
   }
+
+  /// URL for the real vanilla watering-can water-gauge frame/background
+  /// (`GameConnectionService.iconUrl('watering-can-gauge')` — see
+  /// `UiIconCache.cs`), the exact crop `WateringCan.drawInMenu` draws
+  /// behind its own water-level fill. Null when not connected. The fill
+  /// itself isn't a sprite (see `InventoryItem.waterFraction`/
+  /// `waterCanIsBottomless`) — [InventorySlot] draws it as a plain
+  /// solid-color rect, same as the sword cooldown-wipe overlay.
+  String? get wateringCanGaugeUrl => iconUrl('watering-can-gauge');
 
   String? _numberedIconUrl(String path, int n) {
     if (_host == null) return null;
@@ -385,6 +384,24 @@ class GameConnectionService extends ChangeNotifier {
     try {
       await _client
           .post(_uri('/organize'), headers: {'Content-Type': 'application/json'})
+          .timeout(_requestTimeout);
+    } catch (_) {
+      // Best-effort — see selectSlot's doc comment.
+    }
+  }
+
+  /// Asks the mod to open the real in-game Journal (quest log) menu —
+  /// the Backpack screen's new Journal button. Opens the exact same
+  /// `QuestLog` menu the journal key/in-game quest-log button does; see
+  /// `ModEntry.ApplyPendingOpenJournal` for the guards against opening
+  /// it mid-cutscene or over another menu. Best-effort, same as
+  /// [selectSlot]/[moveItem]/[organizeBackpack].
+  Future<void> openJournal() async {
+    if (_host == null) return;
+
+    try {
+      await _client
+          .post(_uri('/open-journal'), headers: {'Content-Type': 'application/json'})
           .timeout(_requestTimeout);
     } catch (_) {
       // Best-effort — see selectSlot's doc comment.

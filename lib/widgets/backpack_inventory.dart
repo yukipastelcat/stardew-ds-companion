@@ -144,6 +144,7 @@ class BackpackInventory extends StatelessWidget {
     final frameUrl = connection.slotFrameUrl;
     final selectedFrameUrl = connection.slotSelectedFrameUrl;
     final lockedOverlayUrl = connection.slotLockedOverlayUrl;
+    final wateringCanGaugeUrl = connection.wateringCanGaugeUrl;
 
     final gridWidth = slotSize * columns + (columns - 1) * _slotSpacing;
     final gridHeight = slotSize * rows + (rows - 1) * _slotSpacing;
@@ -181,6 +182,7 @@ class BackpackInventory extends StatelessWidget {
               selectedFrameUrl: selectedFrameUrl,
               lockedOverlayUrl: lockedOverlayUrl,
               qualityStarUrl: item != null ? connection.qualityStarUrl(item.quality) : null,
+              wateringCanGaugeUrl: wateringCanGaugeUrl,
               onTap: locked ? null : () => connection.selectSlot(index),
               onMove: locked ? null : connection.moveItem,
             );

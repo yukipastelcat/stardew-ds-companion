@@ -27,6 +27,7 @@ class DraggableInventorySlot extends StatelessWidget {
     this.selectedFrameUrl,
     this.lockedOverlayUrl,
     this.qualityStarUrl,
+    this.wateringCanGaugeUrl,
     this.onTap,
     this.onMove,
   });
@@ -42,6 +43,9 @@ class DraggableInventorySlot extends StatelessWidget {
 
   /// Real in-game quality star badge for [item] (`GameConnectionService.qualityStarUrl`).
   final String? qualityStarUrl;
+
+  /// Real in-game watering-can water-gauge frame (`GameConnectionService.wateringCanGaugeUrl`).
+  final String? wateringCanGaugeUrl;
   final VoidCallback? onTap;
 
   /// Called with (fromIndex, toIndex) when an item is dropped on this
@@ -60,6 +64,7 @@ class DraggableInventorySlot extends StatelessWidget {
       selectedFrameUrl: selectedFrameUrl,
       lockedOverlayUrl: lockedOverlayUrl,
       qualityStarUrl: qualityStarUrl,
+      wateringCanGaugeUrl: wateringCanGaugeUrl,
       onTap: onTap,
     );
 

@@ -7,6 +7,7 @@ class InventoryItem {
     this.qualifiedItemId,
     this.waterLeft,
     this.waterLeftMax,
+    this.waterCanIsBottomless = false,
     this.quality = 0,
     this.cooldownFraction,
   });
@@ -24,6 +25,13 @@ class InventoryItem {
   /// (or for mock/preview data).
   final int? waterLeft;
   final int? waterLeftMax;
+
+  /// True for an enchanted bottomless watering can (never empties).
+  /// Mirrors the mod's `InventorySlotDto.WaterCanIsBottomless` — picks
+  /// the real vanilla water-gauge fill color (`InventorySlot`'s
+  /// `_WaterGauge`): BlueViolet at full opacity here, DodgerBlue at 70%
+  /// opacity otherwise, exactly matching `WateringCan.drawInMenu`.
+  final bool waterCanIsBottomless;
 
   /// Item quality: 0=normal (no star), 1=silver, 2=gold, 4=iridium —
   /// mirrors the mod's `GameStateSnapshot.InventorySlotDto.Quality`.
@@ -58,6 +66,7 @@ class InventoryItem {
       qualifiedItemId: json['qualifiedItemId'] as String?,
       waterLeft: json['waterLeft'] as int?,
       waterLeftMax: json['waterLeftMax'] as int?,
+      waterCanIsBottomless: json['waterCanIsBottomless'] as bool? ?? false,
       quality: json['quality'] as int? ?? 0,
       cooldownFraction: (json['cooldownFraction'] as num?)?.toDouble(),
     );
@@ -70,6 +79,7 @@ class InventoryItem {
         if (qualifiedItemId != null) 'qualifiedItemId': qualifiedItemId,
         if (waterLeft != null) 'waterLeft': waterLeft,
         if (waterLeftMax != null) 'waterLeftMax': waterLeftMax,
+        if (waterCanIsBottomless) 'waterCanIsBottomless': waterCanIsBottomless,
         if (quality != 0) 'quality': quality,
         if (cooldownFraction != null) 'cooldownFraction': cooldownFraction,
       };

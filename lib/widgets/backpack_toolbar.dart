@@ -1,17 +1,19 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme/stardew_colors.dart';
+import '../theme/stardew_fonts.dart';
 
-/// The Backpack screen's bottom control row: the organize button (moved
-/// here from `BackpackInventory`, still sized to exactly match a grid
-/// slot — see `BackpackInventory.build`'s `slotSize`) on the left, and
-/// the real in-game day/time clock on the right (box backdrop, season
-/// icon, weather icon, digital date/time, and the single sundial-style
-/// needle — see `_GameClock`), sized to [heightMultiplier] times the
-/// organize button's own height.
+/// The Backpack screen's bottom control row: the organize button and
+/// the new Journal button stacked vertically on the left (each sized to
+/// exactly match a grid slot — see `BackpackInventory.build`'s
+/// `slotSize` — and together exactly filling the row's own
+/// [heightMultiplier]x-slotSize height, organize on top / journal
+/// below), and the real in-game day/time clock on the right (box
+/// backdrop, season icon, weather icon, digital date/time, and the
+/// single sundial-style needle — see `_GameClock`), sized to
+/// [heightMultiplier] times a single button's own height.
 ///
 /// This whole row now renders *outside* `BackpackInventory`'s own
 /// height budget — it's a `Positioned` overlay that deliberately
@@ -25,6 +27,10 @@ class BackpackToolbar extends StatelessWidget {
     required this.slotSize,
     required this.organizeIconUrl,
     required this.onOrganize,
+    required this.journalIconUrl,
+    required this.journalPulseIconUrl,
+    required this.onOpenJournal,
+    required this.hasNewQuestActivity,
     required this.farmName,
     required this.currentFunds,
     this.totalEarnings,
@@ -46,6 +52,19 @@ class BackpackToolbar extends StatelessWidget {
 
   final String? organizeIconUrl;
   final VoidCallback onOrganize;
+
+  /// The real vanilla quest-log button icon (`DayTimeMoneyBox.questButton`
+  /// — see `UiIconCache`'s "journal" entry) and its "new activity" pulse
+  /// badge ("journal-pulse"). Tapping opens the real in-game Journal
+  /// (`QuestLog`) — see `GameConnectionService.openJournal`.
+  final String? journalIconUrl;
+  final String? journalPulseIconUrl;
+  final VoidCallback onOpenJournal;
+
+  /// Mirrors `Farmer.hasNewQuestActivity()` (`GameState.hasNewQuestActivity`)
+  /// — while true, the Journal button pulses the same "!" badge the real
+  /// in-game quest-log button pulses (`DayTimeMoneyBox.questPulseTimer`).
+  final bool hasNewQuestActivity;
 
   /// Shown centered between the organize button and the clock — see
   /// `GameState.farmName`/`currentFunds`/`totalEarnings`. [totalEarnings]
@@ -77,12 +96,48 @@ class BackpackToolbar extends StatelessWidget {
   /// class doc comment), so nothing outside this file reads it today.
   static const double heightMultiplier = 2.0;
 
+  /// Both the organize/journal column and the farm-name summary are
+  /// nudged up by this many dp (`Transform.translate(Offset(0, -12))`,
+  /// below) after being centered in the row — a pre-existing tuning
+  /// value, unrelated to the clock, kept here as a named constant so
+  /// [_clockSizeBump] (right below) can be derived from it instead of
+  /// guessed.
+  static const double _rowTopTrim = 12.0;
+
+  /// How much bigger than [heightMultiplier]'s own height the clock
+  /// itself renders. [_GameClock] is always given this exact same
+  /// height as the row, so its top edge sits at the row's own top
+  /// (offset 0) regardless of the bump's value. The organize button's
+  /// top, by contrast, starts at `_clockSizeBump / 2` (its column is
+  /// vertically centered in the taller row) and is then nudged up by
+  /// [_rowTopTrim]. Setting `_clockSizeBump / 2 - _rowTopTrim = 0`
+  /// solves to `_clockSizeBump = 2 * _rowTopTrim` — the value below —
+  /// which is what makes the organize button's top edge land exactly
+  /// on the clock's top edge (the request that grew this from an
+  /// original flat 12dp, then 24dp, bump into a derived one). The
+  /// clock's font size is scaled by the same ratio (see
+  /// [_GameClock.fontScale]) so the digital date/time text grows along
+  /// with the box instead of looking undersized inside it; the
+  /// fraction-based centering in [_GameClock] already re-centers that
+  /// text at whatever size it ends up rendering at, so no separate
+  /// alignment fix is needed there.
+  ///
+  /// NOTE: this aligns the two elements' *bounding boxes*. If the real
+  /// clock-box sprite has any transparent margin baked into its own top
+  /// edge (a cropped HUD sprite easily can), the visible painted box
+  /// will still sit slightly lower than this — that's an asset-level
+  /// offset no bounding-box math here can correct; it'd need measuring
+  /// the actual sprite.
+  static const double _clockSizeBump = 2 * _rowTopTrim;
+
   @override
   Widget build(BuildContext context) {
     final clockHeight = slotSize * heightMultiplier;
+    final biggerClockHeight = clockHeight + _clockSizeBump;
+    final clockFontScale = biggerClockHeight / clockHeight;
 
     return SizedBox(
-      height: clockHeight,
+      height: biggerClockHeight,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         // Bottom-aligned rather than the Row default (center): the
@@ -92,9 +147,36 @@ class BackpackToolbar extends StatelessWidget {
         // instead of floating them in the middle of the taller row.
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _OrganizeButton(iconUrl: organizeIconUrl, onPressed: onOrganize, size: slotSize),
+          // Organize on top, Journal below — together exactly fill the
+          // row's own clockHeight (2x a single slotSize-square button,
+          // see heightMultiplier), so spaceBetween pins one to the top
+          // edge and the other to the bottom with zero gap between them
+          // at the current 2.0 multiplier, and still degrades gracefully
+          // (even spacing instead of a hard overlap) if that multiplier
+          // is ever changed.
+          SizedBox(
+            width: slotSize,
+            height: clockHeight,
+            child: Transform.translate(
+              offset: Offset(0, -_rowTopTrim),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _OrganizeButton(iconUrl: organizeIconUrl, onPressed: onOrganize, size: slotSize),
+                  _JournalButton(
+                    iconUrl: journalIconUrl,
+                    pulseIconUrl: journalPulseIconUrl,
+                    onPressed: onOpenJournal,
+                    hasNewQuestActivity: hasNewQuestActivity,
+                    size: slotSize,
+                  ),
+                ],
+              ),
+            ),
+          ),
           Expanded(
-            child: Center(
+            child: Transform.translate(
+              offset: Offset(0, -_rowTopTrim),
               child: _FarmSummary(
                 farmName: farmName,
                 currentFunds: currentFunds,
@@ -114,7 +196,8 @@ class BackpackToolbar extends StatelessWidget {
             weatherIconUrl: weatherIconUrl,
             boxUrl: clockBoxUrl,
             needleUrl: clockNeedleUrl,
-            height: clockHeight,
+            height: biggerClockHeight,
+            fontScale: clockFontScale,
           ),
         ],
       ),
@@ -178,12 +261,7 @@ class _FarmSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nameStyle = GoogleFonts.pixelifySans(
-      fontSize: 10,
-      fontWeight: FontWeight.w700,
-      color: StardewColors.parchment,
-    );
-    final lineStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.0);
+    final lineStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.5);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -193,6 +271,182 @@ class _FarmSummary extends StatelessWidget {
         Text('Current Funds: $currentFunds', style: lineStyle, textAlign: TextAlign.center),
         Text('Total Earnings: ${totalEarnings ?? 0}', style: lineStyle, textAlign: TextAlign.center),
       ],
+    );
+  }
+}
+
+/// The new Journal button, placed below the organize button (see
+/// [BackpackToolbar.build]) and sized to match it — same "the icon
+/// itself is the tap target" construction as [_OrganizeButton], reusing
+/// its warm pressed-tint treatment. Tapping calls [onPressed]
+/// (`GameConnectionService.openJournal`), which asks the mod to open the
+/// real in-game `QuestLog` menu — the same menu the vanilla journal
+/// key/quest-log button opens.
+///
+/// While [hasNewQuestActivity] is true, a small "!" badge
+/// ([pulseIconUrl] — `UiIconCache`'s "journal-pulse", the exact crop
+/// `DayTimeMoneyBox` itself draws) pulses over the button's top-right
+/// corner, replicating the real in-game quest-log button's own
+/// "new activity" animation: verified against the decompiled
+/// `DayTimeMoneyBox.draw`'s `questPulseTimer` scale formula
+/// (`1f / (Math.Max(300f, Math.Abs(questPulseTimer % 1000 - 500)) / 500f)`)
+/// — a smooth pulse from 1x scale at each 1-second cycle's edges up to
+/// ~1.67x at its midpoint. [_pulseController] repeats every 1000ms
+/// (matching that same 1000ms modulus) while [hasNewQuestActivity] stays
+/// true, and [_scaleMultiplier] below reproduces that exact formula
+/// against the controller's own `value` (0-1, standing in for vanilla's
+/// countdown timer — the formula is symmetric across the cycle, so
+/// counting up instead of down traces the same curve). Vanilla also
+/// jitters the badge by a random +/-1px while scale > 1; that's skipped
+/// here as a deliberate simplification (a per-frame `Random` in a
+/// widget build isn't worth the added complexity for a 1px wobble).
+class _JournalButton extends StatefulWidget {
+  const _JournalButton({
+    required this.iconUrl,
+    required this.pulseIconUrl,
+    required this.onPressed,
+    required this.hasNewQuestActivity,
+    required this.size,
+  });
+
+  final String? iconUrl;
+  final String? pulseIconUrl;
+  final VoidCallback onPressed;
+  final bool hasNewQuestActivity;
+
+  /// Matches the inventory grid's own per-slot size, same as
+  /// [_OrganizeButton.size].
+  final double size;
+
+  @override
+  State<_JournalButton> createState() => _JournalButtonState();
+}
+
+class _JournalButtonState extends State<_JournalButton> with SingleTickerProviderStateMixin {
+  static const _pressedTint = Color(0x8DFCE7B8); // StardewColors.parchment at ~55% opacity
+
+  late final AnimationController _pulseController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1000),
+  );
+
+  bool _pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.hasNewQuestActivity) _pulseController.repeat();
+  }
+
+  @override
+  void didUpdateWidget(_JournalButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hasNewQuestActivity && !oldWidget.hasNewQuestActivity) {
+      _pulseController.repeat();
+    } else if (!widget.hasNewQuestActivity && oldWidget.hasNewQuestActivity) {
+      _pulseController.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  void _setPressed(bool value) {
+    if (_pressed != value) setState(() => _pressed = value);
+  }
+
+  /// See the class doc comment — reproduces
+  /// `DayTimeMoneyBox.draw`'s `questPulseTimer` scale formula against
+  /// [_pulseController]'s own 0-1 `value`.
+  static double _scaleMultiplier(double t) {
+    final ms = t * 1000;
+    final v = (ms - 500).abs();
+    final denom = math.max(300.0, v) / 500.0;
+    return 1 / denom;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget icon = widget.iconUrl == null
+        ? Icon(Icons.menu_book, size: widget.size, color: StardewColors.wood)
+        : Image.network(
+            widget.iconUrl!,
+            width: widget.size,
+            height: widget.size,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.none,
+            errorBuilder: (context, error, stackTrace) =>
+                Icon(Icons.menu_book, size: widget.size, color: StardewColors.wood),
+          );
+
+    if (_pressed) {
+      icon = ColorFiltered(
+        colorFilter: const ColorFilter.mode(_pressedTint, BlendMode.srcATop),
+        child: icon,
+      );
+    }
+
+    final badgeSize = widget.size * 0.4;
+
+    return Tooltip(
+      message: 'Journal',
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        // Calls GameConnectionService.openJournal, which asks the mod to
+        // open the real in-game QuestLog menu — same result as pressing
+        // the journal key (or the in-game quest-log button) in-game.
+        onTap: widget.onPressed,
+        onTapDown: (_) => _setPressed(true),
+        onTapCancel: () => _setPressed(false),
+        onTapUp: (_) => _setPressed(false),
+        child: SizedBox(
+          width: widget.size,
+          height: widget.size,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              icon,
+              if (widget.hasNewQuestActivity)
+                Positioned(
+                  top: -badgeSize * 0.4,
+                  right: -badgeSize * 0.4,
+                  child: AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      final scale = _scaleMultiplier(_pulseController.value);
+                      return Transform.scale(scale: scale, child: child);
+                    },
+                    child: SizedBox(
+                      width: badgeSize,
+                      height: badgeSize,
+                      child: widget.pulseIconUrl == null
+                          ? const DecoratedBox(
+                              decoration: BoxDecoration(
+                                color: StardewColors.accentRed,
+                                shape: BoxShape.circle,
+                              ),
+                            )
+                          : Image.network(
+                              widget.pulseIconUrl!,
+                              fit: BoxFit.contain,
+                              filterQuality: FilterQuality.none,
+                              errorBuilder: (context, error, stackTrace) => const DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: StardewColors.accentRed,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -294,6 +548,7 @@ class _GameClock extends StatelessWidget {
     this.boxUrl,
     this.needleUrl,
     required this.height,
+    this.fontScale = 1.0,
   });
 
   final String weekday;
@@ -308,6 +563,13 @@ class _GameClock extends StatelessWidget {
   final String? boxUrl;
   final String? needleUrl;
   final double height;
+
+  /// Multiplier applied on top of the ambient default text size for the
+  /// digital date/time text (see [BackpackToolbar._clockSizeBump]) — so
+  /// growing this box a flat number of pixels grows its text to match
+  /// instead of leaving it the old, now-comparatively-small size.
+  /// Defaults to 1.0 (no change) for any other caller.
+  final double fontScale;
 
   /// The box sprite's own native size, `Rectangle(333, 431, 71, 43)` on
   /// `Game1.mouseCursors` — every overlay below is positioned as a
@@ -361,7 +623,7 @@ class _GameClock extends StatelessWidget {
     const dateCenterFraction = Offset(183.15 / 284, 43.1 / 172);
     const timeCenterFraction = Offset(183.15 / 284, 133.61 / 172);
 
-    final clockTextStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 0.75, fontWeightDelta: 2);
+    final clockTextStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: fontScale, fontWeightDelta: 2);
 
     return SizedBox(
       width: width,

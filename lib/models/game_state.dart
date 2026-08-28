@@ -69,6 +69,17 @@ class GameState {
     required this.inventory,
     required this.equipment,
     this.totalEarnings,
+    required this.locationName,
+    this.mapMarkerX,
+    this.mapMarkerY,
+    this.title = '',
+    this.farmingLevel = 0,
+    this.miningLevel = 0,
+    this.foragingLevel = 0,
+    this.fishingLevel = 0,
+    this.combatLevel = 0,
+    this.hasVisibleQuests = false,
+    this.hasNewQuestActivity = false,
   });
 
   final String playerName;
@@ -111,6 +122,42 @@ class GameState {
   final List<InventoryItem?> inventory;
   final EquippedItems equipment;
 
+  /// Display name of the location the player is currently in (e.g.
+  /// "Farm", "Town", "The Mines") — see `GameStateSnapshot.LocationName`.
+  final String locationName;
+
+  /// The player's position on the real vanilla world map, as a 0-1
+  /// fraction of `GameConnectionService.worldMapUrl`'s own image
+  /// width/height — see `GameStateSnapshot.MapMarkerX`/`MapMarkerY`.
+  /// Null when the current location isn't mapped in `Data/WorldMap`
+  /// (most mine/cave levels, a handful of interiors), same as the real
+  /// in-game map page showing no marker there either.
+  final double? mapMarkerX;
+
+  /// See [mapMarkerX].
+  final double? mapMarkerY;
+
+  /// Farmer.getTitle() — the title shown under the player's name on the
+  /// real Skills page (e.g. "Newcomer"), derived from total skill level.
+  /// Defaults to '' for backwards compat with older mod builds.
+  final String title;
+
+  /// The five skill levels the Skills screen draws a pip row for — see
+  /// `GameStateSnapshot.FarmingLevel`/etc's doc comment. Luck isn't
+  /// reported/shown (see `SkillsScreen`'s doc comment). Default to 0 for
+  /// backwards compat with older mod builds that don't report these yet.
+  final int farmingLevel;
+  final int miningLevel;
+  final int foragingLevel;
+  final int fishingLevel;
+  final int combatLevel;
+
+  /// Mirrors `Farmer.hasVisibleQuests`/`hasNewQuestActivity()` — see
+  /// `GameStateSnapshot`'s doc comments. [hasNewQuestActivity] drives the
+  /// Backpack screen's Journal button pulse (`BackpackToolbar`).
+  final bool hasVisibleQuests;
+  final bool hasNewQuestActivity;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -135,12 +182,23 @@ class GameState {
       backpackSize: json['backpackSize'] as int? ?? 0,
       selectedIndex: json['selectedIndex'] as int? ?? 0,
       totalEarnings: json['totalEarnings'] as int?,
+      locationName: json['locationName'] as String? ?? '',
+      mapMarkerX: (json['mapMarkerX'] as num?)?.toDouble(),
+      mapMarkerY: (json['mapMarkerY'] as num?)?.toDouble(),
       inventory: rawInventory
           .map((e) => e == null ? null : InventoryItem.fromJson(e as Map<String, dynamic>))
           .toList(),
       equipment: json['equipment'] == null
           ? const EquippedItems()
           : EquippedItems.fromJson(json['equipment'] as Map<String, dynamic>),
+      title: json['title'] as String? ?? '',
+      farmingLevel: json['farmingLevel'] as int? ?? 0,
+      miningLevel: json['miningLevel'] as int? ?? 0,
+      foragingLevel: json['foragingLevel'] as int? ?? 0,
+      fishingLevel: json['fishingLevel'] as int? ?? 0,
+      combatLevel: json['combatLevel'] as int? ?? 0,
+      hasVisibleQuests: json['hasVisibleQuests'] as bool? ?? false,
+      hasNewQuestActivity: json['hasNewQuestActivity'] as bool? ?? false,
     );
   }
 }
