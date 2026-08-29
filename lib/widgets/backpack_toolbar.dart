@@ -209,6 +209,8 @@ class BackpackToolbar extends StatelessWidget {
   /// real [weatherIconUrl] sprite loads.
   static IconData _weatherIcon(String weather) {
     switch (weather) {
+      case 'Green Rain':
+        return Icons.eco_outlined;
       case 'Rainy':
         return Icons.water_drop_outlined;
       case 'Stormy':
