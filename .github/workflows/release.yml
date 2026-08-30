@@ -1,23 +1,23 @@
 name: Release companion
 
-# Manually triggered. Builds the Android APK with the given version stamped
-# in via Flutter's --build-name/--build-number flags (pubspec.yaml is never
-# edited or committed), and publishes a GitHub Release tagged at this commit
-# with the APK attached.
+# Runs when a GitHub Release is published on this repo. Builds the Android
+# APK using whatever version is already committed in pubspec.yaml, and
+# attaches the APK to that release.
+#
+# Versioning is manual: bump pubspec.yaml's version yourself, commit, then
+# publish a release on that commit - this workflow only builds and attaches,
+# it never creates or edits the release.
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to release (e.g. 0.4.0) - passed to flutter build as --build-name and used as the release tag (vVERSION). Not written to pubspec.yaml.'
-        required: true
+  release:
+    types: [published]
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build and release
+  build:
+    name: Build and attach
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -38,18 +38,14 @@ jobs:
       - name: Build APK
         run: |
           flutter pub get
-          flutter build apk --release --build-name="${{ inputs.version }}" --build-number="${{ github.run_number }}"
+          flutter build apk --release
 
       - name: Rename APK
         run: |
           mkdir -p out
-          cp build/app/outputs/flutter-apk/app-release.apk "out/stardew-ds-companion-v${{ inputs.version }}.apk"
+          cp build/app/outputs/flutter-apk/app-release.apk "out/stardew-ds-companion-${{ github.event.release.tag_name }}.apk"
 
-      - name: Create release
+      - name: Upload APK to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "v${{ inputs.version }}" "out/stardew-ds-companion-v${{ inputs.version }}.apk" \
-            --target "${{ github.sha }}" \
-            --title "v${{ inputs.version }}" \
-            --generate-notes
+        run: gh release upload "${{ github.event.release.tag_name }}" "out/stardew-ds-companion-${{ github.event.release.tag_name }}.apk" --clobber
