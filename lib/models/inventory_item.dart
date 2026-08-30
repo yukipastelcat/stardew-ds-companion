@@ -42,13 +42,15 @@ class InventoryItem {
   /// in-game star badge.
   final int quality;
 
-  /// 0-1 fraction of a stabbing/defense sword's real vanilla "reloading"
-  /// cooldown-wipe still remaining (1 = just blocked, counting down to 0
-  /// as it recovers), or null for anything not currently on that
-  /// cooldown. Mirrors the mod's `InventorySlotDto.CooldownFraction` —
-  /// see that field's doc comment for why this rides the state snapshot
-  /// as a plain fraction instead of a sprite URL (the real vanilla
-  /// effect is a flat red color overlay, not cropped game art).
+  /// 0-1 fraction of a melee weapon's real vanilla "reloading"
+  /// cooldown-wipe still remaining (1 = special move just used, counting
+  /// down to 0 as it recovers), or null for anything not currently on
+  /// that cooldown. Covers stabbing/defense swords (block), daggers
+  /// (special stab) and clubs (ground pound). Mirrors the mod's
+  /// `InventorySlotDto.CooldownFraction` — see that field's doc comment
+  /// for why this rides the state snapshot as a plain fraction instead of
+  /// a sprite URL (the real vanilla effect is a flat red color overlay,
+  /// not cropped game art).
   final double? cooldownFraction;
 
   /// [waterLeft] / [waterLeftMax] as a 0-1 fraction, or null when this
