@@ -1,0 +1,55 @@
+name: Release companion
+
+# Manually triggered. Builds the Android APK with the given version stamped
+# in via Flutter's --build-name/--build-number flags (pubspec.yaml is never
+# edited or committed), and publishes a GitHub Release tagged at this commit
+# with the APK attached.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 0.4.0) - passed to flutter build as --build-name and used as the release tag (vVERSION). Not written to pubspec.yaml.'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Build APK
+        run: |
+          flutter pub get
+          flutter build apk --release --build-name="${{ inputs.version }}" --build-number="${{ github.run_number }}"
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp build/app/outputs/flutter-apk/app-release.apk "out/stardew-ds-companion-v${{ inputs.version }}.apk"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ inputs.version }}" "out/stardew-ds-companion-v${{ inputs.version }}.apk" \
+            --target "${{ github.sha }}" \
+            --title "v${{ inputs.version }}" \
+            --generate-notes
