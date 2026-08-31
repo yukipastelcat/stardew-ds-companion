@@ -57,14 +57,13 @@ class VitalsBars extends StatefulWidget {
   /// Cap sprites are 12x16 source = 48x64 at 4x — square-ish, 4:3 tall.
   static const double _capAspect = 64 / 48;
 
-  /// Where the fill sits vertically, as a fraction of the (4:3) cap
-  /// height. Derived from the vanilla stamina bar's own geometry
-  /// (`Game1.drawHUD`, default MaxStamina): 232px bar = 64 top cap + 104
-  /// body + 64 bottom cap; the fill runs [48, 216] of that — i.e. it
-  /// starts 48/64 = 0.75 down the top cap and ends 16/64 = 0.25 up the
-  /// bottom cap.
-  static const double _trackTopCapFraction = 0.75;
-  static const double _trackBottomCapFraction = 0.25;
+  /// Where the fill sits vertically, as a fraction of cap height —
+  /// measured off the actual served sprites: the cap sprites are 16 rows
+  /// tall; the top cap's lighter inner channel only starts at row 13
+  /// (rows 0–12 are the decorative finial), and the bottom cap's channel
+  /// ends at row 13 (rows 14–15 are the rounded foot).
+  static const double _trackTopCapFraction = 13 / 16;
+  static const double _trackBottomCapFraction = 3 / 16;
 
   @override
   State<VitalsBars> createState() => _VitalsBarsState();
