@@ -50,22 +50,21 @@ class VitalsBars extends StatefulWidget {
   /// default 270 max-stamina. Everything below is sized off this ratio.
   static const double _frameAspect = 48 / 224;
 
-  /// Fill sits 12/48 in from each edge of the 48-wide frame (source
-  /// `Rectangle((int)topOfBar.X + 12, ..., 24, ...)`). Tuned down a hair
-  /// from the exact 0.25 so the fill reads as filling the tube at these
-  /// small sizes — adjust against a zoomed screenshot.
-  static const double _fillInsetFraction = 0.20;
+  /// Vanilla's stamina fill is `r.X = topOfBar.X + 12, r.Width = 24` on a
+  /// 48px-wide bar — so 12/48 in from each edge, 24/48 (half) wide.
+  static const double _fillInsetFraction = 12 / 48;
 
   /// Cap sprites are 12x16 source = 48x64 at 4x — square-ish, 4:3 tall.
   static const double _capAspect = 64 / 48;
 
-  /// Where the fill track starts/ends inside the frame, as a fraction of
-  /// [_capAspect]-derived cap height: the top cap eats into the tube from
-  /// the top, the bottom cap from the bottom, but the tube's visible
-  /// opening runs a bit past each cap's inner edge. Eyeballed — tune
-  /// against a zoomed screenshot.
-  static const double _trackTopCapFraction = 0.55;
-  static const double _trackBottomCapFraction = 0.12;
+  /// Where the fill sits vertically, as a fraction of the (4:3) cap
+  /// height. Derived from the vanilla stamina bar's own geometry
+  /// (`Game1.drawHUD`, default MaxStamina): 232px bar = 64 top cap + 104
+  /// body + 64 bottom cap; the fill runs [48, 216] of that — i.e. it
+  /// starts 48/64 = 0.75 down the top cap and ends 16/64 = 0.25 up the
+  /// bottom cap.
+  static const double _trackTopCapFraction = 0.75;
+  static const double _trackBottomCapFraction = 0.25;
 
   @override
   State<VitalsBars> createState() => _VitalsBarsState();
@@ -354,7 +353,9 @@ class _Bar extends StatelessWidget {
         final lipHeight = math.min(fillHeight, math.max(1.0, capHeight * (4 / 64)));
 
         return Stack(
-          clipBehavior: Clip.none,
+          // Clip so a full fill can't visually spill past the frame if
+          // the track constants are a little off for a given sprite.
+          clipBehavior: Clip.hardEdge,
           // Both children are Positioned — without this the Stack would
           // collapse to zero under the loose constraints it gets as a
           // non-positioned child of the energy-bar Stack.
