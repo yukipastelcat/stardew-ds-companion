@@ -26,7 +26,7 @@ import 'companion/skills_screen.dart';
 /// (`SkillsScreen`, repeating the real vanilla Skills page's own
 /// layout) — the actual in-game Journal (quest log) is opened directly
 /// in-game instead, via a new button on the Backpack screen's toolbar
-/// (see `backpack_toolbar.dart`'s `_JournalButton` and
+/// (see `journal_button.dart`'s `JournalButton` and
 /// `GameConnectionService.openJournal`).
 class CompanionScreen extends StatefulWidget {
   const CompanionScreen({super.key, required this.connection});
