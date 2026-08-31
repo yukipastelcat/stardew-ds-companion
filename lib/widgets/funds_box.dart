@@ -40,19 +40,19 @@ class FundsBox extends StatefulWidget {
   final String? boxUrl;
   final String? Function(int digit) digitUrl;
 
-  /// The `money-box` sprite's native size, `Rectangle(340, 472, 65, 17)`.
-  static const double _boxAspect = 65 / 17;
+  /// The served `money-box` crop's size — `Rectangle(340, 472, 65, 17)`
+  /// with the top 3 peg-handle rows removed => 65x14 (see `UiIconCache`).
+  static const double _boxAspect = 65 / 14;
 
-  /// Where the dial sits inside the box, and the per-digit advance — all
-  /// as fractions of the box's own 260x68 (4x) render size, straight from
-  /// the decompiled draw offsets: dial at `(68,196) - (28,172) = (40,24)`
-  /// screen-px from the box's top-left; each digit glyph is 5x8 src (20
-  /// wide at 4x) with a 24px advance.
-  static const double _dialLeftFraction = 40 / 260;
-  static const double _dialTopFraction = 24 / 68;
-  static const double _digitWidthFraction = 20 / 260;
-  static const double _digitAdvanceFraction = 24 / 260;
-  static const double _digitHeightFraction = 32 / 68;
+  /// Where the 8-slot digit well sits inside the (cropped) box and the
+  /// per-digit advance, as fractions of its 65x14 size — measured off the
+  /// actual served sprite: the well is 8 slots of `@#####` starting at
+  /// col 8, rows 6-13 of the uncropped sprite (=> rows 3-10 of the crop).
+  static const double _dialLeftFraction = 9 / 65;
+  static const double _dialTopFraction = 3 / 14;
+  static const double _digitWidthFraction = 5 / 65;
+  static const double _digitAdvanceFraction = 6 / 65;
+  static const double _digitHeightFraction = 8 / 14;
 
   /// `MoneyDial(8)` in `DayTimeMoneyBox`.
   static const int numDigits = 8;
