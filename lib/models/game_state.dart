@@ -83,7 +83,6 @@ class GameState {
     this.exhausted = false,
     this.energyShake = false,
     this.healthShake = false,
-    this.moneyShake = false,
   });
 
   final String playerName;
@@ -178,13 +177,6 @@ class GameState {
   final bool energyShake;
   final bool healthShake;
 
-  /// Mirrors `Game1.dayTimeMoneyBox.moneyShakeTimer > 0` — vanilla
-  /// jitters the money box briefly whenever money changes by a large
-  /// amount. `FundsBox` reproduces the shake (plus the digit roll and
-  /// coin/dust particles, off [currentFunds] changing). Default false
-  /// for older mod builds.
-  final bool moneyShake;
-
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -229,7 +221,6 @@ class GameState {
       exhausted: json['exhausted'] as bool? ?? false,
       energyShake: json['energyShake'] as bool? ?? false,
       healthShake: json['healthShake'] as bool? ?? false,
-      moneyShake: json['moneyShake'] as bool? ?? false,
     );
   }
 }

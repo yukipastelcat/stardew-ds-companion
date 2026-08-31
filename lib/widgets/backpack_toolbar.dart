@@ -8,9 +8,9 @@ import 'organize_button.dart';
 ///
 /// 1. the health/energy bars ([vitals] — `VitalsBars`, built by the
 ///    caller), bottom-aligned to the clock box's body;
-/// 2. the current-funds box ([funds] — `FundsBox`, built by the caller),
-///    in a flexible middle cell (the farm *name* is a separate full-width
-///    row above, owned by `BackpackScreen` — see `FarmName`);
+/// 2. the current-funds text ([funds] — `FarmFunds`, built by the
+///    caller), in a flexible middle cell (the farm *name* is a separate
+///    full-width row above, owned by `BackpackScreen` — see `FarmName`);
 /// 3. the real in-game day/time clock (`GameClock` — box backdrop,
 ///    season icon, weather icon, digital date/time, sundial needle),
 ///    sized to [heightMultiplier] times a single button's own height;
@@ -70,9 +70,8 @@ class BackpackToolbar extends StatelessWidget {
   /// in-game quest-log button pulses (`DayTimeMoneyBox.questPulseTimer`).
   final bool hasNewQuestActivity;
 
-  /// The bottom row's middle (flexible) cell — the current-funds box
-  /// (`FundsBox`), built by the caller since it owns the
-  /// `GameConnectionService` / `GameState`. Vanilla shows current money
+  /// The bottom row's middle (flexible) cell — the current-funds text
+  /// (`FarmFunds`), built by the caller. Vanilla shows current money
   /// only; lifetime earnings aren't in the HUD. The farm *name* is a
   /// separate full-width row above the toolbar, owned by `BackpackScreen`
   /// (see `FarmName`).
@@ -172,7 +171,7 @@ class BackpackToolbar extends StatelessWidget {
         // — and the clock's own box art — to the row's bottom edge
         // instead of floating them in the middle of the taller row.
         crossAxisAlignment: CrossAxisAlignment.center,
-        // Left -> right: health bar, energy bar, funds box, clock,
+        // Left -> right: health bar, energy bar, funds, clock,
         // sort/journal.
         children: [
           // Health/energy bars. The wrapper is the full row height; a
