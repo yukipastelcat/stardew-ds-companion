@@ -80,6 +80,9 @@ class GameState {
     this.combatLevel = 0,
     this.hasVisibleQuests = false,
     this.hasNewQuestActivity = false,
+    this.exhausted = false,
+    this.energyShake = false,
+    this.healthShake = false,
   });
 
   final String playerName;
@@ -158,6 +161,22 @@ class GameState {
   final bool hasVisibleQuests;
   final bool hasNewQuestActivity;
 
+  /// Mirrors `Farmer.exhausted` — the player is over-tired (stamina hit 0,
+  /// or up past 2am). While true, `VitalsBars` draws the vanilla "tired"
+  /// face above the energy bar, the same decoration vanilla `Game1.drawHUD`
+  /// draws. Defaults to false for older mod builds that don't report it.
+  final bool exhausted;
+
+  /// Mirrors `Game1.staminaShakeTimer > 0` / `Game1.hitShakeTimer > 0` —
+  /// vanilla jitters the energy bar (on stamina spend while low, ~1s) and
+  /// the health bar (on taking damage, 250–500ms) and spawns sky-blue /
+  /// red droplet particles by them. `VitalsBars` reproduces the shake +
+  /// droplets while these are true (blood droplets also keyed off
+  /// [health] `<= 10`, matching vanilla's own check). Default false for
+  /// older mod builds.
+  final bool energyShake;
+  final bool healthShake;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -199,6 +218,9 @@ class GameState {
       combatLevel: json['combatLevel'] as int? ?? 0,
       hasVisibleQuests: json['hasVisibleQuests'] as bool? ?? false,
       hasNewQuestActivity: json['hasNewQuestActivity'] as bool? ?? false,
+      exhausted: json['exhausted'] as bool? ?? false,
+      energyShake: json['energyShake'] as bool? ?? false,
+      healthShake: json['healthShake'] as bool? ?? false,
     );
   }
 }

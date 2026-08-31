@@ -320,6 +320,25 @@ class GameConnectionService extends ChangeNotifier {
   /// solid-color rect, same as the sword cooldown-wipe overlay.
   String? get wateringCanGaugeUrl => iconUrl('watering-can-gauge');
 
+  /// URLs for the health / energy (stamina) bar pieces the mod crops from
+  /// the game's own Cursors sheet (`UiIconCache.cs`'s `vitals-*` entries),
+  /// used by `VitalsBars` to redraw the bars the mod now hides in-game
+  /// (`HudBarPatches.cs`). Each bar is a 3-piece vertical sprite: a fixed
+  /// top cap, a vertically-stretched middle, and a fixed bottom cap. The
+  /// colored fill isn't a sprite — `VitalsBars` paints it as a plain rect
+  /// (see `InventoryItem.waterFraction` for the same pattern). Null when
+  /// not connected.
+  String? vitalsBarPieceUrl(String bar, String piece) => iconUrl('vitals-$bar-$piece');
+
+  /// URL for the vanilla "tired" face sprite drawn above the energy bar
+  /// while `GameState.exhausted` (`UiIconCache.cs` `vitals-exhausted`).
+  String? get vitalsExhaustedUrl => iconUrl('vitals-exhausted');
+
+  /// URL for the 5x6 droplet sprite vanilla spawns next to the bars —
+  /// tinted red (blood, low health) or sky-blue (sweat, low stamina) by
+  /// `VitalsBars`'s own particle layer (`UiIconCache.cs` `vitals-droplet`).
+  String? get vitalsDropletUrl => iconUrl('vitals-droplet');
+
   String? _numberedIconUrl(String path, int n) {
     if (_host == null) return null;
     return Uri(

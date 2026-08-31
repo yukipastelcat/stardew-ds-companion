@@ -3,15 +3,18 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../widgets/backpack_inventory.dart';
 import '../../widgets/backpack_toolbar.dart';
+import '../../widgets/farm_funds.dart';
+import '../../widgets/vitals_bars.dart';
 
 /// The Backpack tab: `BackpackInventory` (the 36-slot grid) stacked on
-/// top of `BackpackToolbar` (organize button + game clock), inside the
-/// game-styled window border `CompanionScreen` already wraps every tab
-/// in. This widget owns the `connection.state == null` guard (both
-/// children need a non-null `GameState` to render) and the one
-/// `LayoutBuilder` that resolves the shared grid layout — see
-/// `BackpackInventory.resolveLayout`'s doc comment for why the grid and
-/// the toolbar can't each resolve their own `slotSize` independently.
+/// top of `BackpackToolbar` (health/energy bars, funds, clock,
+/// organize/journal), inside the game-styled window border
+/// `CompanionScreen` already wraps every tab in. This widget owns the
+/// `connection.state == null` guard (both need a non-null `GameState` to
+/// render) and the one `LayoutBuilder` that resolves the shared grid
+/// layout — see `BackpackInventory.resolveLayout`'s doc comment for why
+/// the grid and the toolbar can't each resolve their own `slotSize`
+/// independently.
 ///
 /// The toolbar row is sized to match the grid's own rendered width
 /// (rather than stretching to the full space `BackpackScreen` is given)
@@ -53,10 +56,10 @@ class BackpackScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: BackpackInventory.spacingBeforeToolbar),
-                // Centered at toolbarWidth (the grid's own rendered
-                // width) rather than the Column's full stretch width,
-                // so the organize button/clock line up with the grid's
-                // own edges instead of the (sometimes wider) panel.
+                // Centered at toolbarWidth (the grid's own rendered width)
+                // rather than the Column's full stretch width, so the row
+                // lines up with the grid's own edges instead of the
+                // (sometimes wider) panel.
                 Center(
                   child: SizedBox(
                     width: toolbarWidth,
@@ -70,9 +73,7 @@ class BackpackScreen extends StatelessWidget {
                         journalPulseIconUrl: connection.iconUrl('journal-pulse'),
                         onOpenJournal: connection.openJournal,
                         hasNewQuestActivity: state.hasNewQuestActivity,
-                        farmName: state.farmName,
-                        currentFunds: state.currentFunds,
-                        totalEarnings: state.totalEarnings,
+                        funds: FarmFunds(currentFunds: state.currentFunds),
                         weekday: state.weekday,
                         season: state.season,
                         dayOfMonth: state.dayOfMonth,
@@ -83,6 +84,7 @@ class BackpackScreen extends StatelessWidget {
                         weatherIconUrl: connection.weatherIconUrl(state.weatherIconCode),
                         clockBoxUrl: connection.clockBoxUrl,
                         clockNeedleUrl: connection.clockNeedleUrl,
+                        vitals: VitalsBars(connection: connection, state: state),
                       ),
                     ),
                   ),
