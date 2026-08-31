@@ -339,6 +339,18 @@ class GameConnectionService extends ChangeNotifier {
   /// `VitalsBars`'s own particle layer (`UiIconCache.cs` `vitals-droplet`).
   String? get vitalsDropletUrl => iconUrl('vitals-droplet');
 
+  /// URL for the vanilla `DayTimeMoneyBox` money-box backdrop sprite
+  /// (coin icon + digit well — `UiIconCache.cs` `money-box`), rendered
+  /// standalone by `FundsBox` without the in-game visual join to the
+  /// clock. Null when not connected.
+  String? get moneyBoxUrl => iconUrl('money-box');
+
+  /// URL for one `MoneyDial` digit glyph (0-9), `UiIconCache.cs`
+  /// `money-digit-<d>` — drawn Maroon-tinted, one per place, by
+  /// `FundsBox`. Null when not connected or [digit] is out of range.
+  String? moneyDigitUrl(int digit) =>
+      (digit < 0 || digit > 9) ? null : iconUrl('money-digit-$digit');
+
   String? _numberedIconUrl(String path, int n) {
     if (_host == null) return null;
     return Uri(

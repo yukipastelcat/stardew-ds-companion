@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'farm_summary.dart';
 import 'game_clock.dart';
 import 'journal_button.dart';
 import 'organize_button.dart';
@@ -9,9 +8,9 @@ import 'organize_button.dart';
 ///
 /// 1. the health/energy bars ([vitals] — `VitalsBars`, built by the
 ///    caller), bottom-aligned to the clock box's body;
-/// 2. current funds / lifetime earnings (`FarmFunds`), in a flexible
-///    middle cell (the farm *name* is a separate full-width row above,
-///    owned by `BackpackScreen` — see `FarmName`);
+/// 2. the current-funds box ([funds] — `FundsBox`, built by the caller),
+///    in a flexible middle cell (the farm *name* is a separate full-width
+///    row above, owned by `BackpackScreen` — see `FarmName`);
 /// 3. the real in-game day/time clock (`GameClock` — box backdrop,
 ///    season icon, weather icon, digital date/time, sundial needle),
 ///    sized to [heightMultiplier] times a single button's own height;
@@ -37,8 +36,7 @@ class BackpackToolbar extends StatelessWidget {
     required this.journalPulseIconUrl,
     required this.onOpenJournal,
     required this.hasNewQuestActivity,
-    required this.currentFunds,
-    this.totalEarnings,
+    required this.funds,
     required this.weekday,
     required this.season,
     required this.dayOfMonth,
@@ -72,14 +70,13 @@ class BackpackToolbar extends StatelessWidget {
   /// in-game quest-log button pulses (`DayTimeMoneyBox.questPulseTimer`).
   final bool hasNewQuestActivity;
 
-  /// The bottom row's middle cell — current funds / lifetime earnings
-  /// (`FarmFunds`). [totalEarnings] is nullable for backwards compat with
-  /// older mod builds that don't report it yet (see
-  /// `GameState.totalEarnings`'s own doc comment). The farm *name* is a
-  /// separate full-width row above the toolbar now, owned by
-  /// `BackpackScreen` (see `FarmName`).
-  final int currentFunds;
-  final int? totalEarnings;
+  /// The bottom row's middle (flexible) cell — the current-funds box
+  /// (`FundsBox`), built by the caller since it owns the
+  /// `GameConnectionService` / `GameState`. Vanilla shows current money
+  /// only; lifetime earnings aren't in the HUD. The farm *name* is a
+  /// separate full-width row above the toolbar, owned by `BackpackScreen`
+  /// (see `FarmName`).
+  final Widget funds;
 
   final String weekday;
   final String season;
@@ -175,7 +172,7 @@ class BackpackToolbar extends StatelessWidget {
         // — and the clock's own box art — to the row's bottom edge
         // instead of floating them in the middle of the taller row.
         crossAxisAlignment: CrossAxisAlignment.center,
-        // Left -> right: health bar, energy bar, funds, clock,
+        // Left -> right: health bar, energy bar, funds box, clock,
         // sort/journal.
         children: [
           // Health/energy bars. The wrapper is the full row height; a
@@ -199,12 +196,9 @@ class BackpackToolbar extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Transform.translate(
-              offset: Offset(0, -_rowTopTrim),
-              child: FarmFunds(
-                currentFunds: currentFunds,
-                totalEarnings: totalEarnings,
-              ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: _cellGap),
+              child: funds,
             ),
           ),
           Padding(

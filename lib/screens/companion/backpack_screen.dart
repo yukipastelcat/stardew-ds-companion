@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../widgets/backpack_inventory.dart';
 import '../../widgets/backpack_toolbar.dart';
-import '../../widgets/farm_summary.dart';
+import '../../widgets/farm_name.dart';
+import '../../widgets/funds_box.dart';
 import '../../widgets/vitals_bars.dart';
 
 /// The Backpack tab: `BackpackInventory` (the 36-slot grid), then the
@@ -81,8 +82,12 @@ class BackpackScreen extends StatelessWidget {
                             journalPulseIconUrl: connection.iconUrl('journal-pulse'),
                             onOpenJournal: connection.openJournal,
                             hasNewQuestActivity: state.hasNewQuestActivity,
-                            currentFunds: state.currentFunds,
-                            totalEarnings: state.totalEarnings,
+                            funds: FundsBox(
+                              funds: state.currentFunds,
+                              moneyShake: state.moneyShake,
+                              boxUrl: connection.moneyBoxUrl,
+                              digitUrl: connection.moneyDigitUrl,
+                            ),
                             weekday: state.weekday,
                             season: state.season,
                             dayOfMonth: state.dayOfMonth,
