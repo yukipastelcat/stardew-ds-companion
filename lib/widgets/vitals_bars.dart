@@ -51,11 +51,21 @@ class VitalsBars extends StatefulWidget {
   static const double _frameAspect = 48 / 224;
 
   /// Fill sits 12/48 in from each edge of the 48-wide frame (source
-  /// `Rectangle((int)topOfBar.X + 12, ..., 24, ...)`).
-  static const double _fillInsetFraction = 12 / 48;
+  /// `Rectangle((int)topOfBar.X + 12, ..., 24, ...)`). Tuned down a hair
+  /// from the exact 0.25 so the fill reads as filling the tube at these
+  /// small sizes — adjust against a zoomed screenshot.
+  static const double _fillInsetFraction = 0.20;
 
   /// Cap sprites are 12x16 source = 48x64 at 4x — square-ish, 4:3 tall.
   static const double _capAspect = 64 / 48;
+
+  /// Where the fill track starts/ends inside the frame, as a fraction of
+  /// [_capAspect]-derived cap height: the top cap eats into the tube from
+  /// the top, the bottom cap from the bottom, but the tube's visible
+  /// opening runs a bit past each cap's inner edge. Eyeballed — tune
+  /// against a zoomed screenshot.
+  static const double _trackTopCapFraction = 0.55;
+  static const double _trackBottomCapFraction = 0.12;
 
   @override
   State<VitalsBars> createState() => _VitalsBarsState();
@@ -202,12 +212,15 @@ class _VitalsBarsState extends State<VitalsBars> with SingleTickerProviderStateM
         final s = widget.state;
         final c = widget.connection;
 
-        final healthShakeOffset = s.healthShake
-            ? Offset(_rng.nextInt(7) - 3.0, 0) // vanilla: X only, random(-3,4)
-            : Offset.zero;
-        final energyShakeOffset = s.energyShake
-            ? Offset(_rng.nextInt(7) - 3.0, _rng.nextInt(7) - 3.0)
-            : Offset.zero;
+        // Vanilla shakes by `random.Next(-3, 4)` px on a 48px-wide bar;
+        // scale that to our (much narrower) bar so the wobble stays
+        // proportional instead of flinging a 16px bar ±3px.
+        final shakePx = 3.0 * (barWidth / 48);
+        double jitter() => (_rng.nextDouble() * 2 - 1) * shakePx;
+        final healthShakeOffset =
+            s.healthShake ? Offset(jitter(), 0) : Offset.zero; // vanilla: X only
+        final energyShakeOffset =
+            s.energyShake ? Offset(jitter(), jitter()) : Offset.zero;
 
         return SizedBox(
           width: totalWidth,
@@ -254,10 +267,14 @@ class _VitalsBarsState extends State<VitalsBars> with SingleTickerProviderStateM
                       ),
                       if (s.exhausted)
                         Positioned(
-                          // Vanilla: `topOfBar - new Vector2(0, 11) * 4` —
-                          // a 12x11 sprite at 4x sitting directly on top of
-                          // the bar's top cap.
-                          top: -barWidth * (11 / 12) * VitalsBars._capAspect * 0.5,
+                          // Vanilla draws the 12x11 "tired" sprite at 4x
+                          // (48x11*4) directly on top of the bar's top cap
+                          // — its bottom edge on the bar's top edge. The
+                          // sprite is `width:height = 12:11`, so at
+                          // `width == barWidth` its height is `barWidth *
+                          // 11/12`; offset up by exactly that so it sits
+                          // flush above the bar.
+                          top: -(barWidth * 11 / 12),
                           left: 0,
                           width: barWidth,
                           child: _ExhaustedFace(url: c.vitalsExhaustedUrl, width: barWidth),
@@ -320,12 +337,9 @@ class _Bar extends StatelessWidget {
         final capHeight = w * VitalsBars._capAspect;
         final inset = w * VitalsBars._fillInsetFraction;
 
-        // The fill "track" — the hollow interior of the frame tube. Vanilla
-        // starts the fill 48px (12 source px) below the bar top and runs it
-        // to near the bottom; approximate with a top offset of ~0.7 of the
-        // top cap and a bottom offset of ~0.35 of the bottom cap.
-        final trackTop = capHeight * 0.7;
-        final trackBottom = capHeight * 0.35;
+        // The fill "track" — the hollow interior of the frame tube.
+        final trackBottom = capHeight * VitalsBars._trackBottomCapFraction;
+        final trackTop = capHeight * VitalsBars._trackTopCapFraction;
         final trackHeight = math.max(0.0, h - trackTop - trackBottom);
         final fillHeight = trackHeight * fraction.clamp(0.0, 1.0);
 
