@@ -219,10 +219,18 @@ class _VitalBarState extends State<VitalBar> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    // Fills whatever box the caller gives it (`VitalsBars` sizes it to
+    // `height * frameAspect` wide). The inner LayoutBuilder is only for
+    // the pixel maths (shake amplitude, droplet scale) — it never picks
+    // its own size, so it's safe under any constraints.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final h = constraints.maxHeight.isFinite ? constraints.maxHeight : constraints.maxWidth;
-        final w = h * VitalBar.frameAspect;
+        final w = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : (constraints.maxHeight.isFinite ? constraints.maxHeight * VitalBar.frameAspect : 0.0);
+        final h = constraints.maxHeight.isFinite
+            ? constraints.maxHeight
+            : (w == 0 ? 0.0 : w / VitalBar.frameAspect);
 
         // Vanilla shakes by `random.Next(-3, 4)` px on a 48px-wide bar;
         // scale that to our (much narrower) bar so the wobble stays
@@ -235,46 +243,43 @@ class _VitalBarState extends State<VitalBar> with SingleTickerProviderStateMixin
                 ? Offset(jitter(), 0) // vanilla: health shakes X only
                 : Offset(jitter(), jitter());
 
-        return SizedBox(
-          width: w,
-          height: h,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned.fill(
-                child: Transform.translate(
-                  offset: shakeOffset,
-                  child: _Frame(
-                    fraction: _fraction,
-                    fillColor: _redToGreenLerp(_fraction),
-                    frameTint: _frameTint,
-                    topCapUrl: widget.capTopUrl,
-                    bodyUrl: widget.bodyUrl,
-                    bottomCapUrl: widget.capBottomUrl,
-                  ),
+        return Stack(
+          clipBehavior: Clip.none,
+          fit: StackFit.expand,
+          children: [
+            Positioned.fill(
+              child: Transform.translate(
+                offset: shakeOffset,
+                child: _Frame(
+                  fraction: _fraction,
+                  fillColor: _redToGreenLerp(_fraction),
+                  frameTint: _frameTint,
+                  topCapUrl: widget.capTopUrl,
+                  bodyUrl: widget.bodyUrl,
+                  bottomCapUrl: widget.capBottomUrl,
                 ),
               ),
-              if (widget.kind == VitalKind.energy && widget.exhausted)
-                Positioned(
-                  // Vanilla draws the 12x11 "tired" sprite at 4x directly
-                  // on top of the bar's top cap — its bottom edge on the
-                  // bar's top edge. The sprite is `width:height = 12:11`,
-                  // so at `width == w` its height is `w * 11/12`; offset
-                  // up by exactly that so it sits flush above the bar.
-                  top: -(w * 11 / 12),
-                  left: 0,
-                  width: w,
-                  child: _ExhaustedFace(url: widget.exhaustedUrl, width: w),
-                ),
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: CustomPaint(
-                    painter: _DropletPainter(droplets: _droplets, box: Size(w, h)),
-                  ),
+            ),
+            if (widget.kind == VitalKind.energy && widget.exhausted)
+              Positioned(
+                // Vanilla draws the 12x11 "tired" sprite at 4x directly
+                // on top of the bar's top cap — its bottom edge on the
+                // bar's top edge. The sprite is `width:height = 12:11`,
+                // so at `width == w` its height is `w * 11/12`; offset
+                // up by exactly that so it sits flush above the bar.
+                top: -(w * 11 / 12),
+                left: 0,
+                width: w,
+                child: _ExhaustedFace(url: widget.exhaustedUrl, width: w),
+              ),
+            Positioned.fill(
+              child: IgnorePointer(
+                child: CustomPaint(
+                  painter: _DropletPainter(droplets: _droplets, box: Size(w, h)),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );
@@ -308,8 +313,11 @@ class _Frame extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final h = constraints.maxHeight;
+        // `_Frame` always fills a tightly-sized box (see [VitalBar.build]);
+        // guard anyway so an unexpected unbounded constraint can't push an
+        // infinite/NaN size into the Positioned fill below.
+        final w = constraints.maxWidth.isFinite ? constraints.maxWidth : 0.0;
+        final h = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
         final capHeight = w * VitalBar._capAspect;
         final inset = w * VitalBar._fillInsetFraction;
 

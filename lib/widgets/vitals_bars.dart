@@ -31,35 +31,55 @@ class VitalsBars extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final h = constraints.maxHeight.isFinite ? constraints.maxHeight : constraints.maxWidth;
-        final gap = h * VitalBar.frameAspect * 0.35;
+        // The parent (BackpackToolbar) pins the height; width comes in
+        // unbounded (a non-flex Row child), so derive everything from the
+        // height.
+        final height = constraints.maxHeight.isFinite ? constraints.maxHeight : constraints.maxWidth;
+        final barWidth = height * VitalBar.frameAspect;
+        final gap = barWidth * 0.35;
+        final totalWidth = barWidth * 2 + gap;
 
-        return Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            VitalBar(
-              kind: VitalKind.health,
-              value: s.health,
-              max: s.maxHealth,
-              shake: s.healthShake,
-              capTopUrl: c.vitalsBarPieceUrl('health', 'cap-top'),
-              bodyUrl: c.vitalsBarPieceUrl('health', 'body'),
-              capBottomUrl: c.vitalsBarPieceUrl('health', 'cap-bottom'),
-            ),
-            SizedBox(width: gap),
-            VitalBar(
-              kind: VitalKind.energy,
-              value: s.energy,
-              max: s.maxEnergy,
-              shake: s.energyShake,
-              exhausted: s.exhausted,
-              capTopUrl: c.vitalsBarPieceUrl('energy', 'cap-top'),
-              bodyUrl: c.vitalsBarPieceUrl('energy', 'body'),
-              capBottomUrl: c.vitalsBarPieceUrl('energy', 'cap-bottom'),
-              exhaustedUrl: c.vitalsExhaustedUrl,
-            ),
-          ],
+        return SizedBox(
+          width: totalWidth,
+          height: height,
+          child: Stack(
+            // Droplets / the tired face reach outside the bar box.
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                left: 0,
+                top: 0,
+                width: barWidth,
+                height: height,
+                child: VitalBar(
+                  kind: VitalKind.health,
+                  value: s.health,
+                  max: s.maxHealth,
+                  shake: s.healthShake,
+                  capTopUrl: c.vitalsBarPieceUrl('health', 'cap-top'),
+                  bodyUrl: c.vitalsBarPieceUrl('health', 'body'),
+                  capBottomUrl: c.vitalsBarPieceUrl('health', 'cap-bottom'),
+                ),
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                width: barWidth,
+                height: height,
+                child: VitalBar(
+                  kind: VitalKind.energy,
+                  value: s.energy,
+                  max: s.maxEnergy,
+                  shake: s.energyShake,
+                  exhausted: s.exhausted,
+                  capTopUrl: c.vitalsBarPieceUrl('energy', 'cap-top'),
+                  bodyUrl: c.vitalsBarPieceUrl('energy', 'body'),
+                  capBottomUrl: c.vitalsBarPieceUrl('energy', 'cap-bottom'),
+                  exhaustedUrl: c.vitalsExhaustedUrl,
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
