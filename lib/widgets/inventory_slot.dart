@@ -22,13 +22,14 @@ import '../theme/stardew_colors.dart';
 /// Two more real-game touches: a quality star badge (silver/gold/
 /// iridium — `Object.drawInMenu`'s own icon, cropped by the mod's
 /// `UiIconCache`) in the slot's bottom-left corner for anything with
-/// [InventoryItem.quality] set, and — for a stabbing/defense sword
-/// still recovering from a block — the same red "reloading" wipe
-/// vanilla's own `MeleeWeapon.drawInMenu` draws over the icon
-/// (`Color.Red` at 66% opacity, anchored to the bottom edge and
-/// shrinking upward as [InventoryItem.cooldownFraction] counts down to
-/// 0), reproduced here as a plain color overlay rather than a sprite
-/// since that's what the real effect actually is.
+/// [InventoryItem.quality] set, and — for a melee weapon still
+/// recovering from its special move (sword block, dagger stab, club
+/// pound) — the same red "reloading" wipe vanilla's own
+/// `MeleeWeapon.drawInMenu` draws over the icon (`Color.Red` at 66%
+/// opacity, anchored to the bottom edge and shrinking upward as
+/// [InventoryItem.cooldownFraction] counts down to 0), reproduced here
+/// as a plain color overlay rather than a sprite since that's what the
+/// real effect actually is.
 class InventorySlot extends StatelessWidget {
   const InventorySlot({
     super.key,
@@ -220,17 +221,17 @@ class InventorySlot extends StatelessWidget {
   }
 }
 
-/// The real vanilla "reloading" cooldown overlay a stabbing/defense
-/// sword's own `drawInMenu` draws while its block special is
-/// recovering: a translucent red rectangle anchored to the slot's
-/// bottom edge, sized to [fraction] of the slot's full height (1 = just
-/// blocked, covering the whole icon; shrinking toward 0 as the real
-/// vanilla `defenseCooldown` timer counts down), so the icon gets
-/// visibly "uncovered" from the top down as the weapon becomes usable
-/// again — the exact same math as `Game1.staminaRect` drawn at
-/// `Color.Red * 0.66f`, just as a solid color box instead of a 1x1
-/// tinted texture (there's no sprite to crop here — the real effect
-/// already is a flat color fill).
+/// The real vanilla "reloading" cooldown overlay a melee weapon's own
+/// `drawInMenu` draws while its special move is recovering: a
+/// translucent red rectangle anchored to the slot's bottom edge, sized
+/// to [fraction] of the slot's full height (1 = special just used,
+/// covering the whole icon; shrinking toward 0 as the real vanilla
+/// per-type cooldown timer — `defenseCooldown`, `daggerCooldown` or
+/// `clubCooldown` — counts down), so the icon gets visibly "uncovered"
+/// from the top down as the weapon becomes usable again — the exact
+/// same math as `Game1.staminaRect` drawn at `Color.Red * 0.66f`, just
+/// as a solid color box instead of a 1x1 tinted texture (there's no
+/// sprite to crop here — the real effect already is a flat color fill).
 class _CooldownWipe extends StatelessWidget {
   const _CooldownWipe({required this.fraction});
 
