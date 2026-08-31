@@ -316,24 +316,28 @@ class _Bar extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
         final capHeight = w * VitalsBars._capAspect;
         final inset = w * VitalsBars._fillInsetFraction;
-        final fillWidth = w - inset * 2;
 
-        // The fill spans the bar's interior height (between the caps),
-        // anchored to the bottom, at `fraction` of that height.
-        final interiorHeight = constraints.maxHeight - capHeight;
-        final fillHeight = (interiorHeight * fraction.clamp(0.0, 1.0)).clamp(0.0, interiorHeight);
+        // The fill "track" — the hollow interior of the frame tube. Vanilla
+        // starts the fill 48px (12 source px) below the bar top and runs it
+        // to near the bottom; approximate with a top offset of ~0.7 of the
+        // top cap and a bottom offset of ~0.35 of the bottom cap.
+        final trackTop = capHeight * 0.7;
+        final trackBottom = capHeight * 0.35;
+        final trackHeight = math.max(0.0, h - trackTop - trackBottom);
+        final fillHeight = trackHeight * fraction.clamp(0.0, 1.0);
 
-        // Darker 4px lip at the fill's top — vanilla does `c.R -= 50;
-        // c.G -= 50;` and redraws a 4-tall slice.
+        // Darker lip at the fill's top — vanilla does `c.R -= 50; c.G -= 50;`
+        // and redraws a 4-of-64 slice.
         final lip = Color.fromARGB(
           255,
           (fillColor.r * 255.0 - 50).clamp(0, 255).round(),
           (fillColor.g * 255.0 - 50).clamp(0, 255).round(),
           (fillColor.b * 255.0).clamp(0, 255).round(),
         );
-        final lipHeight = math.min(fillHeight, capHeight * (4 / 64));
+        final lipHeight = math.min(fillHeight, math.max(1.0, capHeight * (4 / 64)));
 
         return Stack(
           clipBehavior: Clip.none,
@@ -342,21 +346,7 @@ class _Bar extends StatelessWidget {
           // non-positioned child of the energy-bar Stack.
           fit: StackFit.expand,
           children: [
-            // Coloured fill, behind the frame so the frame's rim overlaps it.
-            Positioned(
-              left: inset,
-              width: fillWidth,
-              bottom: capHeight * 0.5,
-              height: fillHeight,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: lipHeight, child: ColoredBox(color: lip)),
-                  Expanded(child: ColoredBox(color: fillColor)),
-                ],
-              ),
-            ),
-            // Frame: caps pinned, body stretched between them.
+            // Frame first (behind) — caps pinned, body stretched between.
             Positioned.fill(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -364,6 +354,22 @@ class _Bar extends StatelessWidget {
                   _frameImage(topCapUrl, height: capHeight),
                   Expanded(child: _frameImage(bodyUrl, fit: BoxFit.fill)),
                   _frameImage(bottomCapUrl, height: capHeight),
+                ],
+              ),
+            ),
+            // Coloured fill on top of the frame's hollow interior, inset so
+            // the tube walls still show — this is the order vanilla draws
+            // in (frame, then `staminaRect` fill at +12px inset).
+            Positioned(
+              left: inset,
+              right: inset,
+              bottom: trackBottom,
+              height: fillHeight,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: lipHeight, child: ColoredBox(color: lip)),
+                  Expanded(child: ColoredBox(color: fillColor)),
                 ],
               ),
             ),
