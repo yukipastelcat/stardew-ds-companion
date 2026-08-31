@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../widgets/backpack_inventory.dart';
 import '../../widgets/backpack_toolbar.dart';
+import '../../widgets/vitals_bars.dart';
 
 /// The Backpack tab: `BackpackInventory` (the 36-slot grid) stacked on
 /// top of `BackpackToolbar` (organize button + game clock), inside the
@@ -83,6 +84,7 @@ class BackpackScreen extends StatelessWidget {
                         weatherIconUrl: connection.weatherIconUrl(state.weatherIconCode),
                         clockBoxUrl: connection.clockBoxUrl,
                         clockNeedleUrl: connection.clockNeedleUrl,
+                        vitals: VitalsBars(connection: connection, state: state),
                       ),
                     ),
                   ),

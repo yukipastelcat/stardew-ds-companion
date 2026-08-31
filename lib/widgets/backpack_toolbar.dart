@@ -10,10 +10,12 @@ import '../theme/stardew_fonts.dart';
 /// exactly match a grid slot — see `BackpackInventory.build`'s
 /// `slotSize` — and together exactly filling the row's own
 /// [heightMultiplier]x-slotSize height, organize on top / journal
-/// below), and the real in-game day/time clock on the right (box
-/// backdrop, season icon, weather icon, digital date/time, and the
-/// single sundial-style needle — see `_GameClock`), sized to
-/// [heightMultiplier] times a single button's own height.
+/// below), the health/energy bars ([vitals] — `VitalsBars`, built by the
+/// caller) just left of the clock and bottom-aligned to the clock box's
+/// body, and the real in-game day/time clock on the right (box backdrop,
+/// season icon, weather icon, digital date/time, and the single
+/// sundial-style needle — see `_GameClock`), sized to [heightMultiplier]
+/// times a single button's own height.
 ///
 /// This whole row now renders *outside* `BackpackInventory`'s own
 /// height budget — it's a `Positioned` overlay that deliberately
@@ -44,6 +46,7 @@ class BackpackToolbar extends StatelessWidget {
     this.weatherIconUrl,
     this.clockBoxUrl,
     this.clockNeedleUrl,
+    required this.vitals,
   });
 
   /// Matches the inventory grid's own per-slot size — see
@@ -89,6 +92,12 @@ class BackpackToolbar extends StatelessWidget {
   final String? clockBoxUrl;
   final String? clockNeedleUrl;
 
+  /// The health/energy bars (`VitalsBars`), built by the caller since it
+  /// owns the `GameConnectionService` / `GameState`. Placed immediately
+  /// left of the clock and bottom-aligned to the clock box's body — see
+  /// [_clockLegFraction] and `build`.
+  final Widget vitals;
+
   /// How much taller the clock is than the organize button — "2x of
   /// the sort icon height", per request. Public so `BackpackInventory`
   /// could reference the same ratio if it ever needs to reserve space
@@ -130,11 +139,26 @@ class BackpackToolbar extends StatelessWidget {
   /// the actual sprite.
   static const double _clockSizeBump = 2 * _rowTopTrim;
 
+  /// The vanilla `DayTimeMoneyBox` backdrop sprite
+  /// (`Rectangle(333, 431, 71, 43)` — see `ClockCache.cs` and `_GameClock`)
+  /// has two short peg "legs" baked into the bottom few rows of its 43px
+  /// height. The health/energy bars are meant to sit flush with the box's
+  /// *body*, above those legs, so they're bottom-aligned to
+  /// `clockBottom - _clockLegFraction * clockHeight`. ~3 of 43 source px
+  /// by eye off the sprite sheet — confirm visually against the real crop
+  /// (`/clock-box`), same "measure the actual sprite" caveat `_GameClock`'s
+  /// own doc comment raises about transparent margins.
+  static const double _clockLegFraction = 3 / 43;
+
+  /// Small horizontal gap between the bars and the clock box.
+  static const double _vitalsClockGap = 6;
+
   @override
   Widget build(BuildContext context) {
     final clockHeight = slotSize * heightMultiplier;
     final biggerClockHeight = clockHeight + _clockSizeBump;
     final clockFontScale = biggerClockHeight / clockHeight;
+    final vitalsHeight = biggerClockHeight * (1 - _clockLegFraction);
 
     return SizedBox(
       height: biggerClockHeight,
@@ -182,6 +206,23 @@ class BackpackToolbar extends StatelessWidget {
                 currentFunds: currentFunds,
                 totalEarnings: totalEarnings,
               ),
+            ),
+          ),
+          // Health/energy bars. The wrapper is the full row height; a
+          // bottom pad of the clock's leg-peg height then leaves exactly
+          // `vitalsHeight` for the bars, ending them level with the clock
+          // box's body (its art bottom, above the two peg legs) rather
+          // than its true bottom edge. `mainAxisSize: min` keeps the
+          // Column from trying to fill the (unbounded, in a Row) main
+          // axis — the two SizedBoxes already sum to `biggerClockHeight`.
+          Padding(
+            padding: EdgeInsets.only(right: _vitalsClockGap),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: vitalsHeight, child: vitals),
+                SizedBox(height: biggerClockHeight * _clockLegFraction),
+              ],
             ),
           ),
           _GameClock(
