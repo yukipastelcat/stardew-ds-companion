@@ -114,24 +114,16 @@ class BackpackInventory extends StatelessWidget {
   /// dependency the original single-widget version had to solve
   /// algebraically (slotSize determines the toolbar's height, but that
   /// height also eats into the space slotSize is computed from).
-  ///
-  /// [reservedAboveToolbar] is any additional fixed-height content
-  /// `BackpackScreen` stacks between the grid and the toolbar (currently
-  /// the full-width `FarmName` row) — reserved the same way so it doesn't
-  /// squeeze the grid into an overflow.
   static ({int columns, int rows, double slotSize}) resolveLayout(
     BoxConstraints constraints, {
     required double toolbarHeightMultiplier,
-    double reservedAboveToolbar = 0,
   }) {
-    final wideSlotSize =
-        _slotSizeFor(constraints, _wideColumns, _wideRows, toolbarHeightMultiplier, reservedAboveToolbar);
+    final wideSlotSize = _slotSizeFor(constraints, _wideColumns, _wideRows, toolbarHeightMultiplier);
     final useCompact = wideSlotSize < _compactBreakpoint;
     final columns = useCompact ? _compactColumns : _wideColumns;
     final rows = useCompact ? _compactRows : _wideRows;
-    final slotSize = useCompact
-        ? _slotSizeFor(constraints, columns, rows, toolbarHeightMultiplier, reservedAboveToolbar)
-        : wideSlotSize;
+    final slotSize =
+        useCompact ? _slotSizeFor(constraints, columns, rows, toolbarHeightMultiplier) : wideSlotSize;
     return (columns: columns, rows: rows, slotSize: slotSize);
   }
 
@@ -140,12 +132,10 @@ class BackpackInventory extends StatelessWidget {
     int columns,
     int rows,
     double toolbarHeightMultiplier,
-    double reservedAboveToolbar,
   ) {
     final maxSlotSize = (constraints.maxWidth - (columns - 1) * _slotSpacing) / columns;
-    final maxByHeight =
-        (constraints.maxHeight - (rows - 1) * _slotSpacing - spacingBeforeToolbar - reservedAboveToolbar) /
-            (rows + toolbarHeightMultiplier);
+    final maxByHeight = (constraints.maxHeight - (rows - 1) * _slotSpacing - spacingBeforeToolbar) /
+        (rows + toolbarHeightMultiplier);
     return (maxSlotSize < maxByHeight ? maxSlotSize : maxByHeight).clamp(16.0, double.infinity);
   }
 

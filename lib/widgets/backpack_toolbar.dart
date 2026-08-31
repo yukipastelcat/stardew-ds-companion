@@ -9,8 +9,7 @@ import 'organize_button.dart';
 /// 1. the health/energy bars ([vitals] — `VitalsBars`, built by the
 ///    caller), bottom-aligned to the clock box's body;
 /// 2. the current-funds text ([funds] — `FarmFunds`, built by the
-///    caller), in a flexible middle cell (the farm *name* is a separate
-///    full-width row above, owned by `BackpackScreen` — see `FarmName`);
+///    caller), in a flexible middle cell;
 /// 3. the real in-game day/time clock (`GameClock` — box backdrop,
 ///    season icon, weather icon, digital date/time, sundial needle),
 ///    sized to [heightMultiplier] times a single button's own height;
@@ -72,9 +71,8 @@ class BackpackToolbar extends StatelessWidget {
 
   /// The bottom row's middle (flexible) cell — the current-funds text
   /// (`FarmFunds`), built by the caller. Vanilla shows current money
-  /// only; lifetime earnings aren't in the HUD. The farm *name* is a
-  /// separate full-width row above the toolbar, owned by `BackpackScreen`
-  /// (see `FarmName`).
+  /// only; lifetime earnings aren't in the HUD, and the farm name isn't
+  /// shown here at all.
   final Widget funds;
 
   final String weekday;
