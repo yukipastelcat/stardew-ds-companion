@@ -5,17 +5,20 @@ import 'game_clock.dart';
 import 'journal_button.dart';
 import 'organize_button.dart';
 
-/// The Backpack screen's bottom control row: the organize button and
-/// the new Journal button stacked vertically on the left (each sized to
-/// exactly match a grid slot — see `BackpackInventory.build`'s
-/// `slotSize` — and together exactly filling the row's own
-/// [heightMultiplier]x-slotSize height, organize on top / journal
-/// below), the health/energy bars ([vitals] — `VitalsBars`, built by the
-/// caller) just left of the clock and bottom-aligned to the clock box's
-/// body, and the real in-game day/time clock on the right (box backdrop,
-/// season icon, weather icon, digital date/time, and the single
-/// sundial-style needle — see `GameClock`), sized to [heightMultiplier]
-/// times a single button's own height.
+/// The Backpack screen's bottom control row, left to right:
+///
+/// 1. the health/energy bars ([vitals] — `VitalsBars`, built by the
+///    caller), bottom-aligned to the clock box's body;
+/// 2. the farm name / funds / earnings summary (`FarmSummary`), in a
+///    flexible middle cell;
+/// 3. the real in-game day/time clock (`GameClock` — box backdrop,
+///    season icon, weather icon, digital date/time, sundial needle),
+///    sized to [heightMultiplier] times a single button's own height;
+/// 4. the organize button and the new Journal button stacked vertically
+///    (each sized to exactly match a grid slot — see
+///    `BackpackInventory.build`'s `slotSize` — together exactly filling
+///    the row's own [heightMultiplier]x-slotSize height, organize on top
+///    / journal below).
 ///
 /// This whole row now renders *outside* `BackpackInventory`'s own
 /// height budget — it's a `Positioned` overlay that deliberately
@@ -93,8 +96,8 @@ class BackpackToolbar extends StatelessWidget {
   final String? clockNeedleUrl;
 
   /// The health/energy bars (`VitalsBars`), built by the caller since it
-  /// owns the `GameConnectionService` / `GameState`. Placed immediately
-  /// left of the clock and bottom-aligned to the clock box's body — see
+  /// owns the `GameConnectionService` / `GameState`. The leftmost cell of
+  /// the bottom row, bottom-aligned to the clock box's body — see
   /// [_clockLegFraction] and `build`.
   final Widget vitals;
 
@@ -150,8 +153,9 @@ class BackpackToolbar extends StatelessWidget {
   /// own doc comment raises about transparent margins.
   static const double _clockLegFraction = 3 / 43;
 
-  /// Small horizontal gap between the bars and the clock box.
-  static const double _vitalsClockGap = 6;
+  /// Small horizontal gap between adjacent cells of the bottom row
+  /// (bars | farm info | clock | sort/journal).
+  static const double _cellGap = 6;
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +174,54 @@ class BackpackToolbar extends StatelessWidget {
         // — and the clock's own box art — to the row's bottom edge
         // instead of floating them in the middle of the taller row.
         crossAxisAlignment: CrossAxisAlignment.center,
+        // Left -> right: health bar, energy bar, farm info, clock,
+        // sort/journal.
         children: [
+          // Health/energy bars. The wrapper is the full row height; a
+          // bottom pad of the clock's leg-peg height then leaves exactly
+          // `vitalsHeight` for the bars, ending them level with the clock
+          // box's body (its art bottom, above the two peg legs) rather
+          // than its true bottom edge. `mainAxisSize: min` keeps the
+          // Column from trying to fill the (unbounded, in a Row) main
+          // axis — the two SizedBoxes already sum to `biggerClockHeight`.
+          Padding(
+            padding: EdgeInsets.only(right: _cellGap),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: vitalsHeight, child: vitals),
+                SizedBox(height: biggerClockHeight * _clockLegFraction),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Transform.translate(
+              offset: Offset(0, -_rowTopTrim),
+              child: FarmSummary(
+                farmName: farmName,
+                currentFunds: currentFunds,
+                totalEarnings: totalEarnings,
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: _cellGap),
+            child: GameClock(
+              weekday: weekday,
+              season: season,
+              dayOfMonth: dayOfMonth,
+              hour24: hour24,
+              minute: minute,
+              weatherIcon: _weatherIcon(weather),
+              weatherLabel: weather,
+              seasonIconUrl: seasonIconUrl,
+              weatherIconUrl: weatherIconUrl,
+              boxUrl: clockBoxUrl,
+              needleUrl: clockNeedleUrl,
+              height: biggerClockHeight,
+              fontScale: clockFontScale,
+            ),
+          ),
           // Organize on top, Journal below — together exactly fill the
           // row's own clockHeight (2x a single slotSize-square button,
           // see heightMultiplier), so spaceBetween pins one to the top
@@ -197,48 +248,6 @@ class BackpackToolbar extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-          Expanded(
-            child: Transform.translate(
-              offset: Offset(0, -_rowTopTrim),
-              child: FarmSummary(
-                farmName: farmName,
-                currentFunds: currentFunds,
-                totalEarnings: totalEarnings,
-              ),
-            ),
-          ),
-          // Health/energy bars. The wrapper is the full row height; a
-          // bottom pad of the clock's leg-peg height then leaves exactly
-          // `vitalsHeight` for the bars, ending them level with the clock
-          // box's body (its art bottom, above the two peg legs) rather
-          // than its true bottom edge. `mainAxisSize: min` keeps the
-          // Column from trying to fill the (unbounded, in a Row) main
-          // axis — the two SizedBoxes already sum to `biggerClockHeight`.
-          Padding(
-            padding: EdgeInsets.only(right: _vitalsClockGap),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: vitalsHeight, child: vitals),
-                SizedBox(height: biggerClockHeight * _clockLegFraction),
-              ],
-            ),
-          ),
-          GameClock(
-            weekday: weekday,
-            season: season,
-            dayOfMonth: dayOfMonth,
-            hour24: hour24,
-            minute: minute,
-            weatherIcon: _weatherIcon(weather),
-            weatherLabel: weather,
-            seasonIconUrl: seasonIconUrl,
-            weatherIconUrl: weatherIconUrl,
-            boxUrl: clockBoxUrl,
-            needleUrl: clockNeedleUrl,
-            height: biggerClockHeight,
-            fontScale: clockFontScale,
           ),
         ],
       ),
