@@ -9,8 +9,9 @@ import 'organize_button.dart';
 ///
 /// 1. the health/energy bars ([vitals] — `VitalsBars`, built by the
 ///    caller), bottom-aligned to the clock box's body;
-/// 2. the farm name / funds / earnings summary (`FarmSummary`), in a
-///    flexible middle cell;
+/// 2. current funds / lifetime earnings (`FarmFunds`), in a flexible
+///    middle cell (the farm *name* is a separate full-width row above,
+///    owned by `BackpackScreen` — see `FarmName`);
 /// 3. the real in-game day/time clock (`GameClock` — box backdrop,
 ///    season icon, weather icon, digital date/time, sundial needle),
 ///    sized to [heightMultiplier] times a single button's own height;
@@ -36,7 +37,6 @@ class BackpackToolbar extends StatelessWidget {
     required this.journalPulseIconUrl,
     required this.onOpenJournal,
     required this.hasNewQuestActivity,
-    required this.farmName,
     required this.currentFunds,
     this.totalEarnings,
     required this.weekday,
@@ -72,11 +72,12 @@ class BackpackToolbar extends StatelessWidget {
   /// in-game quest-log button pulses (`DayTimeMoneyBox.questPulseTimer`).
   final bool hasNewQuestActivity;
 
-  /// Shown centered between the organize button and the clock — see
-  /// `GameState.farmName`/`currentFunds`/`totalEarnings`. [totalEarnings]
-  /// is nullable for backwards compat with older mod builds that don't
-  /// report it yet (see `GameState.totalEarnings`'s own doc comment).
-  final String farmName;
+  /// The bottom row's middle cell — current funds / lifetime earnings
+  /// (`FarmFunds`). [totalEarnings] is nullable for backwards compat with
+  /// older mod builds that don't report it yet (see
+  /// `GameState.totalEarnings`'s own doc comment). The farm *name* is a
+  /// separate full-width row above the toolbar now, owned by
+  /// `BackpackScreen` (see `FarmName`).
   final int currentFunds;
   final int? totalEarnings;
 
@@ -174,7 +175,7 @@ class BackpackToolbar extends StatelessWidget {
         // — and the clock's own box art — to the row's bottom edge
         // instead of floating them in the middle of the taller row.
         crossAxisAlignment: CrossAxisAlignment.center,
-        // Left -> right: health bar, energy bar, farm info, clock,
+        // Left -> right: health bar, energy bar, funds, clock,
         // sort/journal.
         children: [
           // Health/energy bars. The wrapper is the full row height; a
@@ -184,21 +185,23 @@ class BackpackToolbar extends StatelessWidget {
           // than its true bottom edge. `mainAxisSize: min` keeps the
           // Column from trying to fill the (unbounded, in a Row) main
           // axis — the two SizedBoxes already sum to `biggerClockHeight`.
-          Padding(
-            padding: EdgeInsets.only(right: _cellGap),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(height: vitalsHeight, child: vitals),
-                SizedBox(height: biggerClockHeight * _clockLegFraction),
-              ],
+          Transform.translate(
+            offset: Offset(0, 5),
+            child: Padding(
+              padding: EdgeInsets.only(right: _cellGap),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: vitalsHeight, child: vitals),
+                  SizedBox(height: biggerClockHeight * _clockLegFraction),
+                ],
+              ),
             ),
           ),
           Expanded(
             child: Transform.translate(
               offset: Offset(0, -_rowTopTrim),
-              child: FarmSummary(
-                farmName: farmName,
+              child: FarmFunds(
                 currentFunds: currentFunds,
                 totalEarnings: totalEarnings,
               ),
@@ -233,11 +236,15 @@ class BackpackToolbar extends StatelessWidget {
             width: slotSize,
             height: clockHeight,
             child: Transform.translate(
-              offset: Offset(0, -_rowTopTrim),
+              offset: Offset(0, -_rowTopTrim + 5),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  OrganizeButton(iconUrl: organizeIconUrl, onPressed: onOrganize, size: slotSize),
+                  OrganizeButton(
+                    iconUrl: organizeIconUrl,
+                    onPressed: onOrganize,
+                    size: slotSize,
+                  ),
                   JournalButton(
                     iconUrl: journalIconUrl,
                     pulseIconUrl: journalPulseIconUrl,

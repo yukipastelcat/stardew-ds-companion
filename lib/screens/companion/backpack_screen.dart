@@ -3,16 +3,19 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../widgets/backpack_inventory.dart';
 import '../../widgets/backpack_toolbar.dart';
+import '../../widgets/farm_summary.dart';
 import '../../widgets/vitals_bars.dart';
 
-/// The Backpack tab: `BackpackInventory` (the 36-slot grid) stacked on
-/// top of `BackpackToolbar` (organize button + game clock), inside the
-/// game-styled window border `CompanionScreen` already wraps every tab
-/// in. This widget owns the `connection.state == null` guard (both
-/// children need a non-null `GameState` to render) and the one
-/// `LayoutBuilder` that resolves the shared grid layout — see
-/// `BackpackInventory.resolveLayout`'s doc comment for why the grid and
-/// the toolbar can't each resolve their own `slotSize` independently.
+/// The Backpack tab: `BackpackInventory` (the 36-slot grid), then the
+/// full-width `FarmName` row, then `BackpackToolbar` (health/energy bars,
+/// funds, clock, organize/journal), inside the game-styled window border
+/// `CompanionScreen` already wraps every tab in. This widget owns the
+/// `connection.state == null` guard (all three need a non-null
+/// `GameState` to render) and the one `LayoutBuilder` that resolves the
+/// shared grid layout — see `BackpackInventory.resolveLayout`'s doc
+/// comment for why the grid and the toolbar can't each resolve their own
+/// `slotSize` independently, and why the `FarmName` row's height is
+/// reserved there.
 ///
 /// The toolbar row is sized to match the grid's own rendered width
 /// (rather than stretching to the full space `BackpackScreen` is given)
@@ -37,6 +40,7 @@ class BackpackScreen extends StatelessWidget {
             final layout = BackpackInventory.resolveLayout(
               constraints,
               toolbarHeightMultiplier: BackpackToolbar.heightMultiplier,
+              reservedAboveToolbar: FarmName.rowHeight,
             );
             final toolbarWidth = layout.slotSize * layout.columns +
                 (layout.columns - 1) * BackpackInventory.slotSpacing;
@@ -54,38 +58,45 @@ class BackpackScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: BackpackInventory.spacingBeforeToolbar),
-                // Centered at toolbarWidth (the grid's own rendered
-                // width) rather than the Column's full stretch width,
-                // so the organize button/clock line up with the grid's
-                // own edges instead of the (sometimes wider) panel.
+                // Farm name on its own full-width row, then the control
+                // row — both centered at toolbarWidth (the grid's own
+                // rendered width) rather than the Column's full stretch
+                // width, so they line up with the grid's own edges
+                // instead of the (sometimes wider) panel.
                 Center(
                   child: SizedBox(
                     width: toolbarWidth,
-                    child: Transform.translate(
-                      offset: Offset(0, 12),
-                      child: BackpackToolbar(
-                        slotSize: layout.slotSize,
-                        organizeIconUrl: connection.iconUrl('organize'),
-                        onOrganize: connection.organizeBackpack,
-                        journalIconUrl: connection.iconUrl('journal'),
-                        journalPulseIconUrl: connection.iconUrl('journal-pulse'),
-                        onOpenJournal: connection.openJournal,
-                        hasNewQuestActivity: state.hasNewQuestActivity,
-                        farmName: state.farmName,
-                        currentFunds: state.currentFunds,
-                        totalEarnings: state.totalEarnings,
-                        weekday: state.weekday,
-                        season: state.season,
-                        dayOfMonth: state.dayOfMonth,
-                        hour24: state.hour24,
-                        minute: state.minute,
-                        weather: state.weather,
-                        seasonIconUrl: connection.seasonIconUrl(state.seasonNumber),
-                        weatherIconUrl: connection.weatherIconUrl(state.weatherIconCode),
-                        clockBoxUrl: connection.clockBoxUrl,
-                        clockNeedleUrl: connection.clockNeedleUrl,
-                        vitals: VitalsBars(connection: connection, state: state),
-                      ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        FarmName(farmName: state.farmName),
+                        Transform.translate(
+                          offset: Offset(0, 12),
+                          child: BackpackToolbar(
+                            slotSize: layout.slotSize,
+                            organizeIconUrl: connection.iconUrl('organize'),
+                            onOrganize: connection.organizeBackpack,
+                            journalIconUrl: connection.iconUrl('journal'),
+                            journalPulseIconUrl: connection.iconUrl('journal-pulse'),
+                            onOpenJournal: connection.openJournal,
+                            hasNewQuestActivity: state.hasNewQuestActivity,
+                            currentFunds: state.currentFunds,
+                            totalEarnings: state.totalEarnings,
+                            weekday: state.weekday,
+                            season: state.season,
+                            dayOfMonth: state.dayOfMonth,
+                            hour24: state.hour24,
+                            minute: state.minute,
+                            weather: state.weather,
+                            seasonIconUrl: connection.seasonIconUrl(state.seasonNumber),
+                            weatherIconUrl: connection.weatherIconUrl(state.weatherIconCode),
+                            clockBoxUrl: connection.clockBoxUrl,
+                            clockNeedleUrl: connection.clockNeedleUrl,
+                            vitals: VitalsBars(connection: connection, state: state),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
