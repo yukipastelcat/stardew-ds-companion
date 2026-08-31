@@ -16,7 +16,7 @@ class FarmName extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.5);
+    final style = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.5, fontWeightDelta: 2);
     return SizedBox(
       height: rowHeight,
       child: Center(
@@ -49,14 +49,23 @@ class FarmFunds extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final lineStyle = DefaultTextStyle.of(context).style.apply(fontSizeFactor: 1.5);
+    final headerStyle = lineStyle.apply(fontWeightDelta: 2);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text('Current: ${currentFunds}g', style: lineStyle, textAlign: TextAlign.center),
-        Text('Total: ${totalEarnings ?? 0}g', style: lineStyle, textAlign: TextAlign.center),
+        Text('Funds', style: headerStyle, textAlign: TextAlign.center),
+        Text('Current: ${_grouped(currentFunds)}g', style: lineStyle, textAlign: TextAlign.center),
+        Text('Total: ${_grouped(totalEarnings ?? 0)}g', style: lineStyle, textAlign: TextAlign.center),
       ],
     );
   }
+
+  /// Groups a non-negative integer's digits into thousands with commas
+  /// ("1234567" -> "1,234,567"). Stardew money is never negative, so no
+  /// sign handling. Dependency-free (no `intl`).
+  static String _grouped(int value) => value
+      .toString()
+      .replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+$)'), (m) => '${m[1]},');
 }
