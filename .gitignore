@@ -122,3 +122,7 @@ app.*.symbols
 *.ipr
 *.iws
 .idea/
+
+# .NET file-based-app discovery cache written by the C# tooling,
+# anchored to the first folder in the multi-root workspace (companion)
+/dotnet/
