@@ -92,6 +92,25 @@ class GameConnectionService extends ChangeNotifier {
     try {
       final channel = WebSocketChannel.connect(uri);
       _channel = channel;
+
+      // `WebSocketChannel.connect` returns synchronously without
+      // actually connecting — per its own doc comment, a failed
+      // connection attempt (mod/game not running yet, wrong port, the
+      // common case here since this app polls a fixed localhost
+      // address) completes `channel.ready` with an error (a
+      // WebSocketChannelException, or a TimeoutException) rather than
+      // throwing here or necessarily reaching `stream`'s `onError`.
+      // Left unobserved, that rejected Future is reported by Dart as
+      // an unhandled exception — this is that report the user saw.
+      // `_onSocketDown` is idempotent (it checks `generation` and
+      // cancels/resets before scheduling a retry), so it's safe to
+      // route both this and `stream`'s own `onError`/`onDone` (kept
+      // below as a second, redundant safety net for a connection that
+      // drops after having connected successfully) through it.
+      channel.ready.catchError((Object _) {
+        _onSocketDown(generation);
+      });
+
       _channelSubscription = channel.stream.listen(
         (raw) => _onMessage(generation, raw),
         onError: (Object _) => _onSocketDown(generation),
@@ -153,6 +172,27 @@ class GameConnectionService extends ChangeNotifier {
   }
 
   Uri _uri(String path) => Uri.parse('http://${_host!}:$port$path');
+
+  /// Builds the URL for the mod's `GET /animal-sprite?type=` endpoint —
+  /// a PNG of that breed's real in-game portrait, cropped straight out
+  /// of the animal's own loaded sprite texture (see
+  /// stardew-ds-mod/AnimalIconCache.cs) — not anything this app bundles
+  /// or downloads itself. Keyed by [type] (`AnimalSummary.type`, e.g.
+  /// "White Chicken") rather than by individual animal, since every
+  /// animal of the same breed shares one texture — same sharing as
+  /// [spriteUrl] caching per qualified item id rather than per
+  /// inventory slot. Returns null when not connected or [type] is
+  /// empty.
+  String? animalSpriteUrl(String type) {
+    if (_host == null || type.isEmpty) return null;
+    return Uri(
+      scheme: 'http',
+      host: _host!,
+      port: port,
+      path: '/animal-sprite',
+      queryParameters: {'type': type},
+    ).toString();
+  }
 
   /// Builds the URL for the mod's `GET /sprite` endpoint, which returns a
   /// PNG cropped from the player's own loaded game textures (see
