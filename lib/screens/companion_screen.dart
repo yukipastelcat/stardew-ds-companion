@@ -3,14 +3,15 @@ import 'package:flutter/material.dart';
 import '../services/game_connection_service.dart';
 import '../widgets/game_nav_bar.dart';
 import '../widgets/game_window_box.dart';
+import 'companion/animals_screen.dart';
 import 'companion/backpack_screen.dart';
 import 'companion/map_screen.dart';
 import 'companion/skills_screen.dart';
 
 /// Shown on the home screen once the app is connected to the game.
-/// Hosts the Backpack/Map/Skills tabs behind a plain top navigation
-/// bar (icon-only, no window-border background or labels — see
-/// `GameNavBar`'s doc comment). Per user request the nav bar now
+/// Hosts the Backpack/Map/Skills/Animals tabs behind a plain top
+/// navigation bar (icon-only, no window-border background or labels
+/// — see `GameNavBar`'s doc comment). Per user request the nav bar now
 /// *overlays* the game-styled `GameWindowBox` panel instead of sitting
 /// above it and pushing it down: the panel fills the full available
 /// area and the nav bar floats on top of its top edge in a `Stack`
@@ -44,6 +45,7 @@ class _CompanionScreenState extends State<CompanionScreen> {
         BackpackScreen(connection: widget.connection),
         MapScreen(connection: widget.connection),
         SkillsScreen(connection: widget.connection),
+        AnimalsScreen(connection: widget.connection),
       ];
 
   @override
@@ -60,7 +62,6 @@ class _CompanionScreenState extends State<CompanionScreen> {
               top: 52,
               child: GameWindowBox(
                 borderUrl: widget.connection.windowBorderUrl,
-                padding: const EdgeInsets.all(kCompanionBoxPadding),
                 child: _screens[_selectedIndex],
               ),
             ),
@@ -90,9 +91,30 @@ class _CompanionScreenState extends State<CompanionScreen> {
                     iconUrl: widget.connection.iconUrl('skills'),
                     // Vanilla's own "skills" tab icon is a bare frame with
                     // the player's mini portrait drawn on top separately —
-                    // see GameNavDestination.portraitOverlayUrl's doc
-                    // comment.
-                    portraitOverlayUrl: widget.connection.miniPortraitUrl,
+                    // see GameNavDestination.overlayIconUrl's doc comment.
+                    overlayIconUrl: widget.connection.miniPortraitUrl,
+                  ),
+                  GameNavDestination(
+                    label: 'Animals',
+                    fallbackIcon: Icons.pets,
+                    // CORRECTED twice now. First it pointed at a raw
+                    // "White Chicken" creature-sprite crop as the tab's
+                    // whole icon — no baked-in frame, unlike Backpack/
+                    // Map/Skills' own icons, so it read as the one
+                    // frameless tab (on the mistaken assumption vanilla
+                    // has no real GameMenu tab for Animals at all). A
+                    // second attempt tried to compensate by borrowing
+                    // Skills' own bare-frame crop as a backing and
+                    // compositing the chicken on top of it as an overlay
+                    // — closer, but still not the actual thing, and
+                    // called out as such. Vanilla 1.6 genuinely added its
+                    // own real "animals" GameMenu tab (confirmed by
+                    // reading the decompiled GameMenu.cs directly — see
+                    // UiIconCache's own doc comment for the citation), so
+                    // this now reads that real icon exactly the same
+                    // simple way Backpack/Map do — one direct `iconUrl`
+                    // crop, no overlay, no borrowed frame.
+                    iconUrl: widget.connection.iconUrl('animals-tab'),
                   ),
                 ],
               ),
