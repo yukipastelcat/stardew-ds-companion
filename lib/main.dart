@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'screens/home_screen.dart';
 import 'theme/stardew_colors.dart';
 import 'theme/stardew_fonts.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Hide the Android nav bar (and status bar) for a fullscreen, game-like feel.
+  // It reappears temporarily on an edge swipe, then auto-hides again.
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   runApp(const StardewDSApp());
 }
 
