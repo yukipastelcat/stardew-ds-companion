@@ -312,7 +312,7 @@ class _HorizontalRule extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget fallback() => Container(height: 1, color: StardewColors.wood);
+    Widget fallback() => Container(height: _visibleHeight, color: StardewColors.wood);
 
     if (url == null) {
       return SizedBox(height: _visibleHeight, child: fallback());
@@ -528,7 +528,7 @@ class _AnimalRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nameStyle = DefaultTextStyle.of(context).style
-        .apply(fontSizeFactor: 1.75);
+        .apply(fontSizeFactor: 2.0);
     // One column's own content, padded — no rule of its own anymore
     // (see this class's doc comment: a single [_HorizontalRule] now
     // spans the whole row instead of one segment per column). `width`
@@ -544,11 +544,7 @@ class _AnimalRow extends StatelessWidget {
     // unbounded-width hazard still applies to any wide content a
     // future column might add, so the guard stays).
     Widget columnContent(Widget content, {double? width}) {
-      final padded = Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: content,
-      );
-      return width == null ? padded : SizedBox(width: width, child: padded);
+      return width == null ? content : SizedBox(width: width, child: content);
     }
 
     // A vertical rule plus its own _dividerRuleGapWidth-wide breathing
@@ -580,7 +576,13 @@ class _AnimalRow extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 6),
                     child: Row(
                       children: [
-                        _Portrait(url: portraitUrl),
+                        Transform.translate(
+                          offset: const Offset(
+                            0,
+                            6,
+                          ), // visual tweak to match reference
+                          child: _Portrait(url: portraitUrl),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Column(
@@ -713,7 +715,7 @@ class _Portrait extends StatelessWidget {
   /// every animal. `filterQuality: FilterQuality.none` below keeps the
   /// upscale crisp/nearest-neighbor rather than blurring these small
   /// pixel-art crops.
-  static const _pixelScale = 2.0;
+  static const _pixelScale = 2.5;
 
   /// Reserves a consistent column width/height across rows regardless
   /// of each animal's real (and varying) crop size, so names still
@@ -722,8 +724,8 @@ class _Portrait extends StatelessWidget {
   /// serves at [_pixelScale] without the `FittedBox` safety net ever
   /// needing to shrink it (pet: `32x24` → `64x48`; a tall farm animal:
   /// up to `~16x28` → `~32x56`).
-  static const _slotWidth = 64.0;
-  static const _slotHeight = 56.0;
+  static const _slotWidth = 32.0 * _pixelScale;
+  static const _slotHeight = 28.0 * _pixelScale;
 
   @override
   Widget build(BuildContext context) {
@@ -733,7 +735,8 @@ class _Portrait extends StatelessWidget {
     return SizedBox(
       width: _slotWidth,
       height: _slotHeight,
-      child: Center(
+      child: Align(
+        alignment: Alignment.bottomCenter, // visual tweak to match reference
         child: url == null
             ? fallback()
             : FittedBox(
