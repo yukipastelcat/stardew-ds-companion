@@ -197,9 +197,12 @@ class GameConnectionService extends ChangeNotifier {
   /// Builds the URL for the mod's `GET /sprite` endpoint, which returns a
   /// PNG cropped from the player's own loaded game textures (see
   /// stardew-ds-mod/SpriteCache.cs) — real in-game art, not anything this
-  /// app bundles or downloads itself. Returns null when not connected or
-  /// [qualifiedItemId] is missing, so callers can fall back to a generic
-  /// icon without a null check at every call site.
+  /// app bundles or downloads itself. [qualifiedItemId] is really the
+  /// mod's opaque sprite cache key (`InventoryItem.qualifiedItemId`'s doc
+  /// comment explains why it isn't always a literal qualified item id).
+  /// Returns null when not connected or [qualifiedItemId] is missing, so
+  /// callers can fall back to a generic icon without a null check at
+  /// every call site.
   String? spriteUrl(String? qualifiedItemId) {
     if (_host == null || qualifiedItemId == null || qualifiedItemId.isEmpty) {
       return null;
