@@ -12,7 +12,7 @@ class GameNavDestination {
     required this.label,
     required this.fallbackIcon,
     this.iconUrl,
-    this.portraitOverlayUrl,
+    this.overlayIconUrl,
   });
 
   final String label;
@@ -23,13 +23,16 @@ class GameNavDestination {
   /// not connected, in which case [fallbackIcon] is used instead.
   final String? iconUrl;
 
-  /// The player's real mini portrait
-  /// (`GameConnectionService.miniPortraitUrl`), composited over
-  /// [iconUrl] when set. Only the Skills tab passes this: verified
-  /// against decompiled `GameMenu.draw`, vanilla's own "skills" tab icon
-  /// (sheetIndex 1, `Rectangle(16, 368, 16, 16)` on Cursors — the exact
-  /// crop `UiIconCache`'s `"skills"` entry uses) is just an empty frame
-  /// by itself; the game draws the player's own mini portrait
+  /// A second icon composited centered on top of [iconUrl], smaller
+  /// than it (see `_GameNavItem.build`) — for a tab whose real vanilla
+  /// icon is itself a bare frame with something else drawn into it
+  /// separately, rather than one self-contained glyph. Only Skills
+  /// uses this, passing `GameConnectionService.miniPortraitUrl` (the
+  /// player's real mini portrait). Verified against decompiled
+  /// `GameMenu.draw`: vanilla's own "skills" tab icon (sheetIndex 1,
+  /// `Rectangle(16, 368, 16, 16)` on Cursors — the exact crop
+  /// `UiIconCache`'s `"skills"` entry uses) is just an empty frame by
+  /// itself; the game draws the player's own mini portrait
   /// (`FarmerRenderer.drawMiniPortrat`) on top of it separately, which
   /// is why a plain crop of that one tile renders as a hollow border
   /// with nothing inside. `MiniPortraitRenderer.cs` (mod-side) now
@@ -38,7 +41,17 @@ class GameNavDestination {
   /// guess off the full-body `/portrait` image (an earlier version of
   /// this reused that instead, and needed an increasingly elaborate
   /// derived crop to approximate a face from it).
-  final String? portraitOverlayUrl;
+  ///
+  /// A previous round also tried routing the Animals tab through this
+  /// same field — borrowing Skills' bare-frame crop as a backing and
+  /// compositing a raw chicken sprite on top of it as the overlay —
+  /// since vanilla was believed to have no real GameMenu tab for
+  /// Animals at all. That belief was wrong (vanilla 1.6 added a real
+  /// one), so Animals now reads its own real tab icon directly as a
+  /// plain `iconUrl`, the same simple way Backpack/Map do — see
+  /// `UiIconCache`'s doc comment (mod-side) and companion_screen.dart's
+  /// Animals destination for the citation.
+  final String? overlayIconUrl;
 }
 
 /// Top navigation bar: icon-only tabs packed against the left edge
@@ -128,22 +141,16 @@ class _GameNavItem extends StatelessWidget {
                 errorBuilder: (context, error, stackTrace) =>
                     Icon(destination.fallbackIcon, size: 50, color: fg),
               ),
-        if (destination.portraitOverlayUrl != null)
+        if (destination.overlayIconUrl != null)
           // Centered on the icon — a plain Stack child, which lines up
           // with the surrounding Stack's own `alignment: Alignment.center`.
-          //
-          // `destination.portraitOverlayUrl` is
-          // `GameConnectionService.miniPortraitUrl` — the real vanilla
-          // head+hair-only render (mod/MiniPortraitRenderer.cs, serving
-          // the exact `FarmerRenderer.drawMiniPortrat` call vanilla's
-          // own Skills tab uses), so this is a plain contain — no
-          // derived crop needed, unlike the full-body `/portrait` image
-          // this used earlier.
+          // See [GameNavDestination.overlayIconUrl]'s doc comment — only
+          // Skills passes this (the player's mini portrait).
           SizedBox(
             width: 40,
             height: 40,
             child: Image.network(
-              destination.portraitOverlayUrl!,
+              destination.overlayIconUrl!,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) =>

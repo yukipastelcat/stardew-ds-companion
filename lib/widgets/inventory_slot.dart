@@ -265,7 +265,7 @@ class _StackCountText extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 11,
+        fontSize: 16,
         fontWeight: FontWeight.w900,
         color: Colors.white,
         shadows: [Shadow(color: Colors.black87, offset: Offset(1, 1))],

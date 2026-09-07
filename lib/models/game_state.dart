@@ -1,3 +1,4 @@
+import 'animal_summary.dart';
 import 'inventory_item.dart';
 
 /// Equipped items reported by the mod, by slot. Display names are always
@@ -83,6 +84,7 @@ class GameState {
     this.exhausted = false,
     this.energyShake = false,
     this.healthShake = false,
+    this.animals = const [],
   });
 
   final String playerName;
@@ -177,6 +179,11 @@ class GameState {
   final bool energyShake;
   final bool healthShake;
 
+  /// Farm animals reported by the mod (see AnimalSummary's doc
+  /// comment for scope) — defaults to empty for backwards compat with
+  /// older mod builds that don't report this yet.
+  final List<AnimalSummary> animals;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -210,6 +217,9 @@ class GameState {
       equipment: json['equipment'] == null
           ? const EquippedItems()
           : EquippedItems.fromJson(json['equipment'] as Map<String, dynamic>),
+      animals: (json['animals'] as List<dynamic>? ?? const [])
+          .map((e) => AnimalSummary.fromJson(e as Map<String, dynamic>))
+          .toList(),
       title: json['title'] as String? ?? '',
       farmingLevel: json['farmingLevel'] as int? ?? 0,
       miningLevel: json['miningLevel'] as int? ?? 0,

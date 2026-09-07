@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../theme/stardew_colors.dart';
 import '../../theme/stardew_fonts.dart';
+import '../../widgets/companion_screen_container.dart';
 
 /// The Map tab: the real vanilla world map background
 /// (`GameConnectionService.worldMapUrl` — see stardew-ds-mod/WorldMapCache.cs),
@@ -13,8 +14,11 @@ import '../../theme/stardew_fonts.dart';
 /// the map at `GameState.mapMarkerX`/`mapMarkerY`.
 ///
 /// Lives inside the game-styled window border `CompanionScreen` already
-/// wraps every tab in, so — like `BackpackScreen`/`JournalScreen` —
-/// this widget doesn't add its own outer `GameWindowBox`.
+/// wraps every tab in, so — like `BackpackScreen`/`SkillsScreen` — this
+/// widget doesn't add its own outer `GameWindowBox`; it wraps its own
+/// content in `CompanionScreenContainer` instead for the standard tab
+/// inset (`AnimalsScreen` wraps itself in it too, but with
+/// `hasPadding: false` — see that screen's own doc comment).
 class MapScreen extends StatelessWidget {
   const MapScreen({super.key, required this.connection});
 
@@ -22,42 +26,44 @@ class MapScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: connection,
-      builder: (context, _) {
-        final state = connection.state;
-        if (state == null) {
-          return const Center(child: Text('Waiting for game data…'));
-        }
+    return CompanionScreenContainer(
+      child: ListenableBuilder(
+        listenable: connection,
+        builder: (context, _) {
+          final state = connection.state;
+          if (state == null) {
+            return const Center(child: Text('Waiting for game data…'));
+          }
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _LocationLabel(text: state.locationName),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Center(
-                child: AspectRatio(
-                  // The real world-map texture (`LooseSprites\map`) has
-                  // been 300x180 for years — not re-verified against a
-                  // real build here (see stardew-ds/mod/README.md's
-                  // "Known risk areas" #8). A slightly-off ratio just
-                  // letterboxes the image a little; it doesn't break the
-                  // marker placement below, since that's positioned as a
-                  // fraction of this same box either way.
-                  aspectRatio: 300 / 180,
-                  child: _WorldMap(
-                    mapUrl: connection.worldMapUrl,
-                    portraitUrl: connection.miniPortraitUrl,
-                    markerX: state.mapMarkerX,
-                    markerY: state.mapMarkerY,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _LocationLabel(text: state.locationName),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Center(
+                  child: AspectRatio(
+                    // The real world-map texture (`LooseSprites\map`) has
+                    // been 300x180 for years — not re-verified against a
+                    // real build here (see stardew-ds/mod/README.md's
+                    // "Known risk areas" #8). A slightly-off ratio just
+                    // letterboxes the image a little; it doesn't break the
+                    // marker placement below, since that's positioned as a
+                    // fraction of this same box either way.
+                    aspectRatio: 300 / 180,
+                    child: _WorldMap(
+                      mapUrl: connection.worldMapUrl,
+                      portraitUrl: connection.miniPortraitUrl,
+                      markerX: state.mapMarkerX,
+                      markerY: state.mapMarkerY,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-      },
+            ],
+          );
+        },
+      ),
     );
   }
 }

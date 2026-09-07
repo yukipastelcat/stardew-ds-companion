@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/game_connection_service.dart';
 import '../../theme/stardew_colors.dart';
 import '../../theme/stardew_fonts.dart';
+import '../../widgets/companion_screen_container.dart';
 
 /// The Skills tab — replaces the old placeholder Journal tab (the
 /// Journal itself now opens *in-game*, via the Backpack screen's new
@@ -29,7 +30,10 @@ import '../../theme/stardew_fonts.dart';
 ///
 /// Lives inside the game-styled window border `CompanionScreen` already
 /// wraps every tab in, so — like `BackpackScreen`/`MapScreen` — this
-/// widget doesn't add its own outer `GameWindowBox`.
+/// widget doesn't add its own outer `GameWindowBox`; it wraps its own
+/// content in `CompanionScreenContainer` instead for the standard tab
+/// inset (`AnimalsScreen` wraps itself in it too, but with
+/// `hasPadding: false` — see that screen's own doc comment).
 class SkillsScreen extends StatelessWidget {
   const SkillsScreen({super.key, required this.connection});
 
@@ -45,59 +49,61 @@ class SkillsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: connection,
-      builder: (context, _) {
-        final state = connection.state;
-        if (state == null) {
-          return const Center(child: Text('Waiting for game data…'));
-        }
+    return CompanionScreenContainer(
+      child: ListenableBuilder(
+        listenable: connection,
+        builder: (context, _) {
+          final state = connection.state;
+          if (state == null) {
+            return const Center(child: Text('Waiting for game data…'));
+          }
 
-        final levelsByName = <String, int>{
-          'Farming': state.farmingLevel,
-          'Mining': state.miningLevel,
-          'Foraging': state.foragingLevel,
-          'Fishing': state.fishingLevel,
-          'Combat': state.combatLevel,
-        };
+          final levelsByName = <String, int>{
+            'Farming': state.farmingLevel,
+            'Mining': state.miningLevel,
+            'Foraging': state.foragingLevel,
+            'Fishing': state.fishingLevel,
+            'Combat': state.combatLevel,
+          };
 
-        // Same day/night swap the clock badge and the Map screen's
-        // portrait marker already key off — matches the game's own
-        // Game1.timeOfDay >= 1900 check (see companion_screen's clock
-        // doc comments / PortraitBackgroundCache.cs).
-        final night = state.hour24 >= 19;
+          // Same day/night swap the clock badge and the Map screen's
+          // portrait marker already key off — matches the game's own
+          // Game1.timeOfDay >= 1900 check (see companion_screen's clock
+          // doc comments / PortraitBackgroundCache.cs).
+          final night = state.hour24 >= 19;
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _PortraitPanel(
-              backgroundUrl: connection.portraitBackgroundUrl(night),
-              portraitUrl: connection.portraitUrl,
-              name: state.playerName,
-              title: state.title,
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (final skill in _skills)
-                    _SkillRow(
-                      name: skill.name,
-                      level: levelsByName[skill.name] ?? 0,
-                      iconUrl: connection.iconUrl(skill.iconKey),
-                      pipEmptyUrl: connection.iconUrl('pip-empty'),
-                      pipFilledUrl: connection.iconUrl('pip-filled'),
-                      pipEmptyWideUrl: connection.iconUrl('pip-empty-wide'),
-                      pipFilledWideUrl: connection.iconUrl('pip-filled-wide'),
-                    ),
-                ],
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PortraitPanel(
+                backgroundUrl: connection.portraitBackgroundUrl(night),
+                portraitUrl: connection.portraitUrl,
+                name: state.playerName,
+                title: state.title,
               ),
-            ),
-          ],
-        );
-      },
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final skill in _skills)
+                      _SkillRow(
+                        name: skill.name,
+                        level: levelsByName[skill.name] ?? 0,
+                        iconUrl: connection.iconUrl(skill.iconKey),
+                        pipEmptyUrl: connection.iconUrl('pip-empty'),
+                        pipFilledUrl: connection.iconUrl('pip-filled'),
+                        pipEmptyWideUrl: connection.iconUrl('pip-empty-wide'),
+                        pipFilledWideUrl: connection.iconUrl('pip-filled-wide'),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }

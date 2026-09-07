@@ -2,15 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../theme/stardew_colors.dart';
 
-/// Padding CompanionScreen's outer [GameWindowBox] uses around all its
-/// tab content (see `CompanionScreen.build`). Exposed here, rather than
-/// left as a private literal at that call site, because
-/// `BackpackInventory`'s toolbar row deliberately breaks out of this
-/// exact inset to sit flush against the box's true bottom edge instead
-/// of respecting it like the rest of the tab content does — see
-/// `BackpackInventory.build`'s doc comment.
-const double kCompanionBoxPadding = 24.0;
-
 /// A panel wrapper styled after the vanilla game's own 9-slice menu
 /// window border (see `GameConnectionService.windowBorderUrl` /
 /// `WindowBorderCache.cs` on the mod side) — the same ornate wood-carved
@@ -24,12 +15,17 @@ const double kCompanionBoxPadding = 24.0;
 /// [Image.centerSlice] does the same 9-slice stretch the game's own
 /// `drawTextureBox` does, so a bordered box of any size reuses the same
 /// four corners, four edges, and stretchy center tile.
+///
+/// This widget is a plain, padding-agnostic frame — it no longer takes
+/// a `padding` parameter itself. A caller that wants its content inset
+/// from the border wraps `child` in its own padding widget before
+/// handing it here (see `CompanionScreenContainer`, which every tab
+/// screen under `CompanionScreen` wraps itself in for this).
 class GameWindowBox extends StatelessWidget {
   const GameWindowBox({
     super.key,
     required this.child,
     this.borderUrl,
-    this.padding = const EdgeInsets.all(12),
   });
 
   final Widget child;
@@ -37,8 +33,6 @@ class GameWindowBox extends StatelessWidget {
   /// From `GameConnectionService.windowBorderUrl`. Null falls back to a
   /// flat parchment box with a solid wood border.
   final String? borderUrl;
-
-  final EdgeInsetsGeometry padding;
 
   static const _fallbackDecoration = BoxDecoration(
     color: StardewColors.parchment,
@@ -49,7 +43,7 @@ class GameWindowBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (borderUrl == null) {
-      return Container(padding: padding, decoration: _fallbackDecoration, child: child);
+      return Container(decoration: _fallbackDecoration, child: child);
     }
 
     return Stack(
@@ -63,7 +57,7 @@ class GameWindowBox extends StatelessWidget {
             errorBuilder: (context, error, stackTrace) => const DecoratedBox(decoration: _fallbackDecoration),
           ),
         ),
-        Padding(padding: padding, child: child),
+        child,
       ],
     );
   }
