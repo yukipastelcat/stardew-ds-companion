@@ -13,7 +13,7 @@
 /// anything else — vanilla itself has no "Animals" page at all (farm
 /// animals aren't listed anywhere in the real game's own `GameMenu`);
 /// the closest real precedent is the well-known `AnimalSocialMenu` mod
-/// (spacechase0), which adds exactly this — a friendship/petting list,
+/// (spacechase0), which adds exactly this — a friendship/care list,
 /// nothing about produce — so this screen matches that same scope
 /// rather than guessing at a wider one. A future round wanting more
 /// (produce-ready, mood, age) needs new `GameStateSnapshot`/`AnimalDto`
@@ -49,7 +49,7 @@ class AnimalSummary {
 
   /// `FarmAnimal.wasPet`, or `Pet.grantedFriendshipForPet` for a house
   /// pet — whether this animal has already been pet today. Drives the
-  /// "Needs petting" label, the same wording (and, for a farm animal,
+  /// "Needs care" label, the same wording (and, for a farm animal,
   /// the same underlying field) `AnimalSocialMenu` itself shows.
   final bool wasPet;
 

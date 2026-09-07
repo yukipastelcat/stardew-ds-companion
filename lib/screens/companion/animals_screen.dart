@@ -7,7 +7,7 @@ import '../../widgets/companion_screen_container.dart';
 
 /// The Animals tab — a real scrollable *table* of the farm's animals
 /// (portrait+name, a 5-heart friendship meter, a hand-cursor icon plus
-/// a real petting-status glyph column), styled after the in-game
+/// a real care-status glyph column), styled after the in-game
 /// reference screenshot from the tracking issue and, as of this round,
 /// after vanilla's own real equivalent screen too: one continuous grid
 /// rather than a list of separate cards, with vertical column rules
@@ -63,17 +63,17 @@ import '../../widgets/companion_screen_container.dart';
 /// - the hand-cursor icon is vanilla's own real cursor sprite
 ///   (`UiIconCache`'s `hand-cursor`, corrected to `AnimalPage`'s own
 ///   10x10 crop from an earlier over-cropped 16x16 guess) — see
-///   `_PettingBadge`'s doc comment for why it's now drawn at
+///   `_CareBadge`'s doc comment for why it's now drawn at
 ///   unconditional full opacity rather than faded by pet status,
 ///   matching `AnimalPage.drawNPCSlot`'s own unconditional draw;
 /// - the per-row status glyph below it is CORRECTED from an entirely
 ///   wrong sprite: an earlier round used
 ///   `StardewValley.Menus.OptionsCheckbox`'s generic checkbox sprite
-///   (`UiIconCache`'s old `petting-checkbox-unchecked`/`-checked`) on
+///   (`UiIconCache`'s old `care-checkbox-unchecked`/`-checked`) on
 ///   the assumption this was a generic checkbox reused here;
 ///   `AnimalPage` reveals it's a dedicated, purpose-built icon instead
-///   (`UiIconCache`'s `petting-status-unpet`/`petting-status-pet`),
-///   wired to `animal.wasPet` — see `_PettingStatusIcon`'s doc comment;
+///   (`UiIconCache`'s `care-status-unpet`/`care-status-pet`),
+///   wired to `animal.wasPet` — see `_CareStatusIcon`'s doc comment;
 /// - the scrollbar's up/down arrows are `AnimalPage`'s own real
 ///   scrollbar buttons (`UiIconCache`'s `scroll-arrow-up`/
 ///   `scroll-arrow-down`, corrected from an earlier guess borrowed from
@@ -253,8 +253,8 @@ class _AnimalTable extends StatelessWidget {
         heartFilledUrl: connection.iconUrl('heart-filled'),
         heartEmptyUrl: connection.iconUrl('heart-empty'),
         handCursorUrl: connection.iconUrl('hand-cursor'),
-        pettingStatusUnpetUrl: connection.iconUrl('petting-status-unpet'),
-        pettingStatusPetUrl: connection.iconUrl('petting-status-pet'),
+        careStatusUnpetUrl: connection.iconUrl('care-status-unpet'),
+        careStatusPetUrl: connection.iconUrl('care-status-pet'),
         horizontalRuleUrl: connection.iconUrl('table-divider-h'),
         verticalRuleUrl: connection.iconUrl('table-divider-v'),
       ),
@@ -393,8 +393,8 @@ class _VerticalRule extends StatelessWidget {
 }
 
 /// One row of the table's grid — portrait+name (flexible), a 5-heart
-/// friendship meter, and a hand-cursor + petting-status-glyph "needs
-/// petting" status column, PLUS the row's own share of the grid lines:
+/// friendship meter, and a hand-cursor + care-status-glyph "needs
+/// care" status column, PLUS the row's own share of the grid lines:
 /// a single [_HorizontalRule] spans the row's FULL width along the
 /// bottom, and a [_VerticalRule] sits between each pair of columns —
 /// no separate grid-drawing widget above this one anymore
@@ -461,8 +461,8 @@ class _AnimalRow extends StatelessWidget {
     required this.heartFilledUrl,
     required this.heartEmptyUrl,
     required this.handCursorUrl,
-    required this.pettingStatusUnpetUrl,
-    required this.pettingStatusPetUrl,
+    required this.careStatusUnpetUrl,
+    required this.careStatusPetUrl,
     required this.horizontalRuleUrl,
     required this.verticalRuleUrl,
   });
@@ -472,8 +472,8 @@ class _AnimalRow extends StatelessWidget {
   final String? heartFilledUrl;
   final String? heartEmptyUrl;
   final String? handCursorUrl;
-  final String? pettingStatusUnpetUrl;
-  final String? pettingStatusPetUrl;
+  final String? careStatusUnpetUrl;
+  final String? careStatusPetUrl;
   final String? horizontalRuleUrl;
   final String? verticalRuleUrl;
 
@@ -484,16 +484,44 @@ class _AnimalRow extends StatelessWidget {
   // at _Heart's own 14px width + 1px gaps between them. Status: one
   // hand-cursor badge plus a little breathing room either side.
   static const double _heartsColumnWidth =
-      _heartCount * _Heart._spriteWidth + (_heartCount - 1);
+      _heartCount * _Heart._spriteWidth + (_heartCount - 1) * _heartGapWidth;
   static const double _statusColumnWidth = 64.0;
 
   // Shared width for both status-column icon slots (see the Column
-  // below) — matches _PettingBadge's and _PettingStatusIcon's now-equal
+  // below) — matches _CareBadge's and _CareStatusIcon's now-equal
   // _size (bumped from 13 to 20 per user request, to match the
   // hand-cursor badge above it), so both icons center on the same
   // width regardless of any off-center padding baked into either
   // sprite crop.
   static const _statusIconSlotWidth = 20.0;
+
+  /// Horizontal padding inside the name column's content (see
+  /// `columnContent`'s `Padding` in `build` below) — also the basis for
+  /// [_rowHeight]'s own "doubled" padding allowance, since that's sized
+  /// to leave the same amount of breathing room above and below a
+  /// column's content as this leaves on either side of it.
+  static const double _columnPadding = 6.0;
+
+  /// Gap between two adjacent hearts in the friendship meter — used both
+  /// in [_heartsColumnWidth] below and in the heart-rendering loop in
+  /// `build`.
+  static const double _heartGapWidth = 1.0;
+
+  /// Gap between the portrait and the name text in the name column.
+  static const double _portraitNameGap = 8.0;
+
+  /// Vertical nudge applied to the portrait — visual tweak to match the
+  /// reference screenshot, see the `Transform.translate` in `build`.
+  static const double _portraitVerticalNudge = 6.0;
+
+  /// Horizontal nudge applied to the status column's icons — visual
+  /// tweak to match the reference screenshot, see the
+  /// `Transform.translate` in `build`.
+  static const double _statusColumnHorizontalNudge = -4.0;
+
+  /// Vertical gap between the hand-cursor badge and the care-status
+  /// icon stacked beneath it in the status column.
+  static const double _statusIconGap = 6.0;
 
   /// Every column's content is forced to this same height (via the
   /// Row's own `crossAxisAlignment: stretch` in `build` below) before
@@ -513,8 +541,9 @@ class _AnimalRow extends StatelessWidget {
   /// rather than duplicating its value blindly.
   static const double _columnContentHeight = _Portrait._slotHeight;
 
-  /// [_columnContentHeight] plus the 6px top/bottom padding every
-  /// column's content gets (see `columnContent` below) — the height
+  /// [_columnContentHeight] plus [_columnPadding], doubled — the same
+  /// top/bottom padding allowance every column's content gets (see
+  /// `columnContent` below) — the height
   /// given to the row of columns (and, via `crossAxisAlignment:
   /// stretch`, to every `_VerticalRule` alongside them) BEFORE the
   /// row's single shared trailing [_HorizontalRule] beneath it. CHANGED
@@ -523,7 +552,7 @@ class _AnimalRow extends StatelessWidget {
   /// doc comment for why per-column rule segments were replaced with
   /// one shared full-width rule (they left real gaps in the line at
   /// every column boundary).
-  static const double _rowHeight = _columnContentHeight + 12;
+  static const double _rowHeight = _columnContentHeight + _columnPadding * 2;
 
   @override
   Widget build(BuildContext context) {
@@ -573,17 +602,16 @@ class _AnimalRow extends StatelessWidget {
               Expanded(
                 child: columnContent(
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: _columnPadding,
+                    ),
                     child: Row(
                       children: [
                         Transform.translate(
-                          offset: const Offset(
-                            0,
-                            6,
-                          ), // visual tweak to match reference
+                          offset: const Offset(0, _portraitVerticalNudge),
                           child: _Portrait(url: portraitUrl),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: _portraitNameGap),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -610,7 +638,7 @@ class _AnimalRow extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     for (var i = 0; i < _heartCount; i++) ...[
-                      if (i > 0) const SizedBox(width: 1),
+                      if (i > 0) const SizedBox(width: _heartGapWidth),
                       _Heart(
                         filled: animal.isHeartFilled(i),
                         half: animal.isHeartHalf(i),
@@ -625,10 +653,7 @@ class _AnimalRow extends StatelessWidget {
               verticalDivider(),
               columnContent(
                 Transform.translate(
-                  offset: const Offset(
-                    -4,
-                    0,
-                  ), // visual tweak to match reference
+                  offset: const Offset(_statusColumnHorizontalNudge, 0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
@@ -643,22 +668,22 @@ class _AnimalRow extends StatelessWidget {
                         child: Row(
                           children: [
                             Center(
-                              child: _PettingBadge(
-                                needsPetting: !animal.wasPet,
+                              child: _CareBadge(
+                                needsCare: !animal.wasPet,
                                 iconUrl: handCursorUrl,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: _statusIconGap),
                       SizedBox(
                         width: _statusIconSlotWidth,
                         child: Center(
-                          child: _PettingStatusIcon(
+                          child: _CareStatusIcon(
                             pet: animal.wasPet,
-                            unpetUrl: pettingStatusUnpetUrl,
-                            petUrl: pettingStatusPetUrl,
+                            unpetUrl: careStatusUnpetUrl,
+                            petUrl: careStatusPetUrl,
                           ),
                         ),
                       ),
@@ -878,7 +903,7 @@ class _Heart extends StatelessWidget {
   }
 }
 
-/// The per-row "needs petting" hand-cursor icon — vanilla's own real
+/// The per-row "needs care" hand-cursor icon — vanilla's own real
 /// `AnimalPage.drawNPCSlot` cursor sprite (see `UiIconCache`'s
 /// `hand-cursor` entry for the exact rect and its own correction
 /// history). Drawn at full opacity unconditionally, matching real
@@ -887,16 +912,16 @@ class _Heart extends StatelessWidget {
 /// vanilla dims this icon as an "actionable vs. done" affordance; it
 /// doesn't — `AnimalPage.drawNPCSlot` draws this icon the same way
 /// every row regardless of pet status, and lets the separate status
-/// glyph below it (see [_PettingStatusIcon]) carry the pet/not-pet
-/// signal instead. [needsPetting] now only tints this widget's
+/// glyph below it (see [_CareStatusIcon]) carry the pet/not-pet
+/// signal instead. [needsCare] now only tints this widget's
 /// disconnected/error fallback icon, not the real sprite.
-class _PettingBadge extends StatelessWidget {
-  const _PettingBadge({required this.needsPetting, required this.iconUrl});
+class _CareBadge extends StatelessWidget {
+  const _CareBadge({required this.needsCare, required this.iconUrl});
 
-  final bool needsPetting;
+  final bool needsCare;
   final String? iconUrl;
 
-  // Shares the status column with _PettingStatusIcon below it now, so
+  // Shares the status column with _CareStatusIcon below it now, so
   // smaller than this widget's original standalone size (24) to leave
   // the two room to stack without crowding a ~40px-wide column.
   static const _size = 20.0;
@@ -906,7 +931,7 @@ class _PettingBadge extends StatelessWidget {
     Widget fallback() => Icon(
       Icons.back_hand,
       size: 16,
-      color: needsPetting
+      color: needsCare
           ? StardewColors.accentRed
           : StardewColors.wood.withValues(alpha: 0.35),
     );
@@ -924,7 +949,7 @@ class _PettingBadge extends StatelessWidget {
   }
 }
 
-/// The per-row petting-status glyph the reference screenshot draws
+/// The per-row care-status glyph the reference screenshot draws
 /// under the status column's hand-cursor icon — CORRECTED twice now:
 /// first from purely decorative to real (a follow-up reference
 /// screenshot showed a green checkmark for an already-pet animal), and
@@ -939,17 +964,17 @@ class _PettingBadge extends StatelessWidget {
 /// `Rectangle(273 + WasPetYet * 9, 253, 9, 9)` — a real 3-state glyph
 /// (not-pet / auto-pet / hand-pet) this app's own `AnimalSummary.wasPet`
 /// bool only distinguishes two of (see `UiIconCache`'s
-/// `petting-status-unpet`/`petting-status-pet` entries for the rects
+/// `care-status-unpet`/`care-status-pet` entries for the rects
 /// this widget actually uses).
 ///
 /// This *is* reading the same underlying `wasPet` field the
-/// hand-cursor icon above it already reads (see `_PettingBadge`'s doc
+/// hand-cursor icon above it already reads (see `_CareBadge`'s doc
 /// comment) — not a second, different signal — but the two aren't a
 /// redundant pair: `AnimalPage.drawNPCSlot` itself draws both, every
 /// row, unconditionally — the hand-cursor as a constant "you can pet
 /// this" affordance, this glyph as the actual pet/not-pet state.
-class _PettingStatusIcon extends StatelessWidget {
-  const _PettingStatusIcon({
+class _CareStatusIcon extends StatelessWidget {
+  const _CareStatusIcon({
     required this.pet,
     required this.unpetUrl,
     required this.petUrl,
@@ -959,7 +984,7 @@ class _PettingStatusIcon extends StatelessWidget {
   final String? unpetUrl;
   final String? petUrl;
 
-  // Matches _PettingBadge's own _size — see _statusIconSlotWidth's doc
+  // Matches _CareBadge's own _size — see _statusIconSlotWidth's doc
   // comment on _AnimalRow for why the two are kept equal.
   static const _size = 20.0;
 
