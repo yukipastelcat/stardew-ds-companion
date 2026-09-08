@@ -16,9 +16,15 @@ class InventoryItem {
   final int quantity;
   final int? iconId;
 
-  /// The item's SDV 1.6 qualified id (e.g. "(O)24") — pass this to
+  /// The sprite cache key for this slot — pass this to
   /// [GameConnectionService.spriteUrl] to fetch its real in-game icon
-  /// from the mod. Null for mock/preview data, which has no mod to ask.
+  /// from the mod. Usually just the SDV 1.6 qualified id (e.g. "(O)24"),
+  /// but for a colored preserve/fish product (Pickles, Jelly, Wine, Roe,
+  /// ...) the mod appends a color suffix too (see the mod's
+  /// `SpriteCache.CacheKeyFor`), since those all share one qualified id
+  /// per item type with the actual color carried per-stack rather than
+  /// in the shared item data. Treat it as an opaque token, not a literal
+  /// item id. Null for mock/preview data, which has no mod to ask.
   final String? qualifiedItemId;
 
   /// Remaining/max water for a watering can; both null for anything else
