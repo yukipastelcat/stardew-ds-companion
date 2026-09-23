@@ -251,6 +251,14 @@ class GameConnectionService extends ChangeNotifier {
     ).toString();
   }
 
+  /// URL for the Feast of the Winter Star secret friend's mugshot (see
+  /// stardew-ds-mod/SecretFriendCache.cs) — only served while
+  /// `GameState.secretFriendName` is non-null. Null when not connected.
+  String? get secretFriendUrl {
+    if (_host == null) return null;
+    return Uri(scheme: 'http', host: _host!, port: port, path: '/secret-friend').toString();
+  }
+
   /// URL for the game's own 9-slice menu window-border texture (see
   /// stardew-ds-mod/WindowBorderCache.cs) — a single 60x60 PNG meant to
   /// be stretched with `Image.centerSlice`. Null when not connected.
