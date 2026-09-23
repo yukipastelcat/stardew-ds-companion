@@ -101,6 +101,10 @@ class GameState {
     this.masteryExpForNextLevel = 0,
     this.masteryLabel = '',
     this.secretFriendName,
+    this.buffedSkills = const {},
+    this.goldenWalnuts = 0,
+    this.qiGems = 0,
+    this.doodleIcon = '',
   });
 
   final String playerName;
@@ -268,6 +272,20 @@ class GameState {
   /// `GameConnectionService.secretFriendUrl`.
   final String? secretFriendName;
 
+  /// Skills whose level a buff is currently raising ("farming", "mining",
+  /// "foraging", "fishing", "combat") — vanilla draws their level number
+  /// green instead of sandy brown.
+  final Set<String> buffedSkills;
+
+  /// The team's unspent Golden Walnuts and this player's Qi Gems —
+  /// vanilla shows each under the player's title while it's above 0.
+  final int goldenWalnuts;
+  final int qiGems;
+
+  /// `/icon` name of the seasonal doodle vanilla draws in the bottom-right
+  /// corner of the Skills page. Empty from an older mod build.
+  final String doodleIcon;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -333,6 +351,10 @@ class GameState {
       masteryExpForNextLevel: json['masteryExpForNextLevel'] as int? ?? 0,
       masteryLabel: json['masteryLabel'] as String? ?? '',
       secretFriendName: json['secretFriendName'] as String?,
+      buffedSkills: (json['buffedSkills'] as List<dynamic>? ?? const []).whereType<String>().toSet(),
+      goldenWalnuts: json['goldenWalnuts'] as int? ?? 0,
+      qiGems: json['qiGems'] as int? ?? 0,
+      doodleIcon: json['doodleIcon'] as String? ?? '',
     );
   }
 }
