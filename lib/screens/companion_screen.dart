@@ -9,7 +9,7 @@ import 'companion/map_screen.dart';
 import 'companion/skills_screen.dart';
 
 /// Shown on the home screen once the app is connected to the game.
-/// Hosts the Backpack/Map/Skills/Animals tabs behind a plain top
+/// Hosts the Backpack/Skills/Map/Pets tabs behind a plain top
 /// navigation bar (icon-only, no window-border background or labels
 /// — see `GameNavBar`'s doc comment). Per user request the nav bar now
 /// *overlays* the game-styled `GameWindowBox` panel instead of sitting
@@ -43,8 +43,8 @@ class _CompanionScreenState extends State<CompanionScreen> {
 
   List<Widget> get _screens => [
         BackpackScreen(connection: widget.connection),
-        MapScreen(connection: widget.connection),
         SkillsScreen(connection: widget.connection),
+        MapScreen(connection: widget.connection),
         AnimalsScreen(connection: widget.connection),
       ];
 
@@ -81,11 +81,6 @@ class _CompanionScreenState extends State<CompanionScreen> {
                     iconUrl: widget.connection.iconUrl('backpack'),
                   ),
                   GameNavDestination(
-                    label: 'Map',
-                    fallbackIcon: Icons.map,
-                    iconUrl: widget.connection.iconUrl('map'),
-                  ),
-                  GameNavDestination(
                     label: 'Skills',
                     fallbackIcon: Icons.bar_chart,
                     iconUrl: widget.connection.iconUrl('skills'),
@@ -95,7 +90,12 @@ class _CompanionScreenState extends State<CompanionScreen> {
                     overlayIconUrl: widget.connection.miniPortraitUrl,
                   ),
                   GameNavDestination(
-                    label: 'Animals',
+                    label: 'Map',
+                    fallbackIcon: Icons.map,
+                    iconUrl: widget.connection.iconUrl('map'),
+                  ),
+                  GameNavDestination(
+                    label: 'Pets',
                     fallbackIcon: Icons.pets,
                     // CORRECTED twice now. First it pointed at a raw
                     // "White Chicken" creature-sprite crop as the tab's

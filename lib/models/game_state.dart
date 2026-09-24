@@ -85,6 +85,27 @@ class GameState {
     this.energyShake = false,
     this.healthShake = false,
     this.animals = const [],
+    this.communityCenterUnlocked = false,
+    this.communityCenterAreas = const [],
+    this.isJojaMember = false,
+    this.communityCenterComplete = false,
+    this.houseUpgradeLevel = 0,
+    this.houseLevelLabel = '',
+    this.deepestMineLevel = 0,
+    this.deepestSkullCavernLevel = 0,
+    this.stardropsFound = 0,
+    this.masteryUnlocked = false,
+    this.masteryLevel = 0,
+    this.masteryProgress = 0,
+    this.masteryExpIntoLevel = 0,
+    this.masteryExpForNextLevel = 0,
+    this.masteryLabel = '',
+    this.masteryLabelWidth = 0,
+    this.secretFriendName,
+    this.buffedSkills = const {},
+    this.goldenWalnuts = 0,
+    this.qiGems = 0,
+    this.doodleIcon = '',
   });
 
   final String playerName;
@@ -184,6 +205,93 @@ class GameState {
   /// older mod builds that don't report this yet.
   final List<AnimalSummary> animals;
 
+  // ---- Skills screen extras ------------------------------------------
+  // The stats vanilla 1.6's own Skills page shows under the skill rows
+  // (mirrors stardew-ds-mod's GameStateSnapshot, which cites the
+  // decompiled SkillsPage.draw). All default to "nothing to show" so an
+  // older mod build that doesn't report them still renders cleanly.
+
+  /// Whether the Community Center tracker is shown at all — the host is
+  /// a Joja member, or the "Meet the Wizard" quest has been completed
+  /// (`canReadJunimoText`). Before that, vanilla draws a locked
+  /// placeholder (`cc-locked` icon) instead.
+  final bool communityCenterUnlocked;
+
+  /// Per-room completion in vanilla area order: Pantry, Crafts Room,
+  /// Fish Tank, Boiler Room, Vault, Bulletin Board. Empty while
+  /// [communityCenterUnlocked] is false.
+  final List<bool> communityCenterAreas;
+
+  /// The host bought a Joja membership — the room stars switch to their
+  /// Joja variants and a Joja panel covers the Bulletin Board slot.
+  final bool isJojaMember;
+
+  /// Every room restored the Junimo way — vanilla draws a Junimo in the
+  /// middle of the room stars.
+  final bool communityCenterComplete;
+
+  /// Farmhouse upgrade tier, 0-3.
+  final int houseUpgradeLevel;
+
+  /// The game's own localized "Level N" label for [houseUpgradeLevel]
+  /// (`houseUpgradeLevel + 1`). Empty from an older mod build.
+  final String houseLevelLabel;
+
+  /// Deepest regular Mines floor reached, 0-120.
+  final int deepestMineLevel;
+
+  /// Deepest Skull Cavern floor reached, 0 until the player has been
+  /// below the Mines. Vanilla shows this instead of [deepestMineLevel]
+  /// once it's non-zero, with a skull over the ladder icon.
+  final int deepestSkullCavernLevel;
+
+  /// Stardrops found, 0-7.
+  final int stardropsFound;
+
+  /// Whether the mastery bar is shown (the player has earned any mastery
+  /// exp). Before that, vanilla draws a locked banner (`mastery-locked`).
+  final bool masteryUnlocked;
+
+  /// Mastery level, 0-5.
+  final int masteryLevel;
+
+  /// Mastery bar fill fraction toward the next level, 0-1 (1 at level 5).
+  final double masteryProgress;
+
+  /// Mastery exp earned into the current level, and exp the next level
+  /// needs — vanilla's "N/M" text. Both 0 at level 5.
+  final int masteryExpIntoLevel;
+  final int masteryExpForNextLevel;
+
+  /// The game's own localized "Mastery" label. Empty from an older mod
+  /// build.
+  final String masteryLabel;
+
+  /// The game's own `smallFont.MeasureString(masteryLabel).X` in native px —
+  /// the Skills page shifts and narrows its mastery bar by it. 0 from an
+  /// older mod build (the app then measures the label itself).
+  final double masteryLabelWidth;
+
+  /// Display name of this year's Feast of the Winter Star secret friend,
+  /// only between winter 18 and the feast (once the invitation letter's
+  /// been read) — null otherwise. Their mugshot is
+  /// `GameConnectionService.secretFriendUrl`.
+  final String? secretFriendName;
+
+  /// Skills whose level a buff is currently raising ("farming", "mining",
+  /// "foraging", "fishing", "combat") — vanilla draws their level number
+  /// green instead of sandy brown.
+  final Set<String> buffedSkills;
+
+  /// The team's unspent Golden Walnuts and this player's Qi Gems —
+  /// vanilla shows each under the player's title while it's above 0.
+  final int goldenWalnuts;
+  final int qiGems;
+
+  /// `/icon` name of the seasonal doodle vanilla draws in the bottom-right
+  /// corner of the Skills page. Empty from an older mod build.
+  final String doodleIcon;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -231,6 +339,29 @@ class GameState {
       exhausted: json['exhausted'] as bool? ?? false,
       energyShake: json['energyShake'] as bool? ?? false,
       healthShake: json['healthShake'] as bool? ?? false,
+      communityCenterUnlocked: json['communityCenterUnlocked'] as bool? ?? false,
+      communityCenterAreas: (json['communityCenterAreas'] as List<dynamic>? ?? const [])
+          .map((e) => e as bool? ?? false)
+          .toList(),
+      isJojaMember: json['isJojaMember'] as bool? ?? false,
+      communityCenterComplete: json['communityCenterComplete'] as bool? ?? false,
+      houseUpgradeLevel: json['houseUpgradeLevel'] as int? ?? 0,
+      houseLevelLabel: json['houseLevelLabel'] as String? ?? '',
+      deepestMineLevel: json['deepestMineLevel'] as int? ?? 0,
+      deepestSkullCavernLevel: json['deepestSkullCavernLevel'] as int? ?? 0,
+      stardropsFound: json['stardropsFound'] as int? ?? 0,
+      masteryUnlocked: json['masteryUnlocked'] as bool? ?? false,
+      masteryLevel: json['masteryLevel'] as int? ?? 0,
+      masteryProgress: (json['masteryProgress'] as num?)?.toDouble() ?? 0,
+      masteryExpIntoLevel: json['masteryExpIntoLevel'] as int? ?? 0,
+      masteryExpForNextLevel: json['masteryExpForNextLevel'] as int? ?? 0,
+      masteryLabel: json['masteryLabel'] as String? ?? '',
+      masteryLabelWidth: (json['masteryLabelWidth'] as num?)?.toDouble() ?? 0,
+      secretFriendName: json['secretFriendName'] as String?,
+      buffedSkills: (json['buffedSkills'] as List<dynamic>? ?? const []).whereType<String>().toSet(),
+      goldenWalnuts: json['goldenWalnuts'] as int? ?? 0,
+      qiGems: json['qiGems'] as int? ?? 0,
+      doodleIcon: json['doodleIcon'] as String? ?? '',
     );
   }
 }
