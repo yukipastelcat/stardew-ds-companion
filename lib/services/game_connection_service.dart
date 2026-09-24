@@ -224,6 +224,25 @@ class GameConnectionService extends ChangeNotifier {
     return Uri(scheme: 'http', host: _host!, port: port, path: '/portrait').toString();
   }
 
+  /// URL for walk-cycle frame [frame] (0-2) of the composited farmer sprite —
+  /// the mod's `GET /portrait?frame=N`. Frame 0 is the still pose, the same
+  /// image as [portraitUrl]. An older mod build ignores the parameter and
+  /// serves frame 0 every time, so the animation just holds still. Null
+  /// when not connected.
+  ///
+  /// [eyes] is the blink state — 0 open, 1 half closed, 4 closed, vanilla's
+  /// own `Farmer.currentEyes` values (ignored by an older mod build).
+  String? portraitFrameUrl(int frame, {int eyes = 0}) {
+    if (_host == null) return null;
+    return Uri(
+      scheme: 'http',
+      host: _host!,
+      port: port,
+      path: '/portrait',
+      queryParameters: {'frame': '$frame', 'eyes': '$eyes'},
+    ).toString();
+  }
+
   /// URL for the mod's `GET /mini-portrait` endpoint — a PNG of the real
   /// vanilla head+hair-only mini portrait (see
   /// stardew-ds-mod/MiniPortraitRenderer.cs), the exact

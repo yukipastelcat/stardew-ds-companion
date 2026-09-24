@@ -100,6 +100,7 @@ class GameState {
     this.masteryExpIntoLevel = 0,
     this.masteryExpForNextLevel = 0,
     this.masteryLabel = '',
+    this.masteryLabelWidth = 0,
     this.secretFriendName,
     this.buffedSkills = const {},
     this.goldenWalnuts = 0,
@@ -266,6 +267,11 @@ class GameState {
   /// build.
   final String masteryLabel;
 
+  /// The game's own `smallFont.MeasureString(masteryLabel).X` in native px —
+  /// the Skills page shifts and narrows its mastery bar by it. 0 from an
+  /// older mod build (the app then measures the label itself).
+  final double masteryLabelWidth;
+
   /// Display name of this year's Feast of the Winter Star secret friend,
   /// only between winter 18 and the feast (once the invitation letter's
   /// been read) — null otherwise. Their mugshot is
@@ -350,6 +356,7 @@ class GameState {
       masteryExpIntoLevel: json['masteryExpIntoLevel'] as int? ?? 0,
       masteryExpForNextLevel: json['masteryExpForNextLevel'] as int? ?? 0,
       masteryLabel: json['masteryLabel'] as String? ?? '',
+      masteryLabelWidth: (json['masteryLabelWidth'] as num?)?.toDouble() ?? 0,
       secretFriendName: json['secretFriendName'] as String?,
       buffedSkills: (json['buffedSkills'] as List<dynamic>? ?? const []).whereType<String>().toSet(),
       goldenWalnuts: json['goldenWalnuts'] as int? ?? 0,
