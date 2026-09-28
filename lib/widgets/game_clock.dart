@@ -116,6 +116,7 @@ class GameClock extends StatelessWidget {
             child: boxUrl != null
                 ? Image.network(
                     boxUrl!,
+                    gaplessPlayback: true,
                     fit: BoxFit.fill,
                     filterQuality: FilterQuality.none,
                     errorBuilder: (context, error, stackTrace) => const _ClockBoxFallback(),
@@ -180,6 +181,7 @@ class GameClock extends StatelessWidget {
               child: needleUrl != null
                   ? Image.network(
                       needleUrl!,
+                      gaplessPlayback: true,
                       fit: BoxFit.fill,
                       filterQuality: FilterQuality.none,
                       errorBuilder: (context, error, stackTrace) => const _ClockNeedleFallback(),
@@ -255,6 +257,7 @@ class _ClockIcon extends StatelessWidget {
       child: spriteUrl != null
           ? Image.network(
               spriteUrl!,
+              gaplessPlayback: true,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) => Icon(icon, size: 16, color: StardewColors.woodDarker),

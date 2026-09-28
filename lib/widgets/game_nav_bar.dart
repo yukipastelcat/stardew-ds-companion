@@ -130,6 +130,7 @@ class _GameNavItem extends StatelessWidget {
             ? Icon(destination.fallbackIcon, size: 50, color: fg)
             : Image.network(
                 iconUrl,
+                gaplessPlayback: true,
                 width: 56,
                 height: 56,
                 // Same fix as the organize button — without an
@@ -151,6 +152,7 @@ class _GameNavItem extends StatelessWidget {
             height: 40,
             child: Image.network(
               destination.overlayIconUrl!,
+              gaplessPlayback: true,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) =>

@@ -688,6 +688,7 @@ class _Pip extends StatelessWidget {
             ? fallback()
             : Image.network(
                 url,
+                gaplessPlayback: true,
                 fit: BoxFit.fill,
                 filterQuality: FilterQuality.none,
                 errorBuilder: (context, error, stackTrace) => fallback(),
@@ -714,6 +715,7 @@ class _Sprite extends StatelessWidget {
     if (url == null) return const SizedBox.shrink();
     return Image.network(
       url!,
+      gaplessPlayback: true,
       fit: fit,
       filterQuality: FilterQuality.none,
       color: tint,
@@ -737,6 +739,7 @@ class _DigitSprite extends StatelessWidget {
     if (url == null) return const SizedBox.shrink();
     return Image.network(
       url!,
+      gaplessPlayback: true,
       fit: BoxFit.fill,
       filterQuality: FilterQuality.none,
       color: tint,
@@ -894,6 +897,7 @@ class _HouseSmokeState extends State<_HouseSmoke> with SingleTickerProviderState
         alignment: Alignment((origin * scale) / (size / 2) - 1, (origin * scale) / (size / 2) - 1),
         child: Image.network(
           url,
+          gaplessPlayback: true,
           fit: BoxFit.fill,
           filterQuality: FilterQuality.none,
           color: const Color.fromRGBO(80, 80, 80, 1).withValues(alpha: alpha),

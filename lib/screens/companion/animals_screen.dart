@@ -327,6 +327,7 @@ class _HorizontalRule extends StatelessWidget {
           alignment: Alignment.center,
           child: Image.network(
             url!,
+            gaplessPlayback: true,
             scale: _dividerRuleTileScale,
             repeat: ImageRepeat.repeatX,
             alignment: Alignment.centerLeft,
@@ -380,6 +381,7 @@ class _VerticalRule extends StatelessWidget {
           alignment: Alignment.center,
           child: Image.network(
             url!,
+            gaplessPlayback: true,
             scale: _dividerRuleTileScale,
             repeat: ImageRepeat.repeatY,
             alignment: Alignment.topCenter,
@@ -768,6 +770,7 @@ class _Portrait extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 child: Image.network(
                   url!,
+                  gaplessPlayback: true,
                   scale: 1 / _pixelScale,
                   filterQuality: FilterQuality.none,
                   errorBuilder: (context, error, stackTrace) => fallback(),
@@ -867,6 +870,7 @@ class _Heart extends StatelessWidget {
           ? fallbackFor(isFilled)
           : Image.network(
               url,
+              gaplessPlayback: true,
               width: _size.width,
               height: _size.height,
               fit: BoxFit.fill,
@@ -940,6 +944,7 @@ class _CareBadge extends StatelessWidget {
         ? fallback()
         : Image.network(
             iconUrl!,
+            gaplessPlayback: true,
             width: _size,
             height: _size,
             fit: BoxFit.contain,
@@ -1012,6 +1017,7 @@ class _CareStatusIcon extends StatelessWidget {
           ? fallback()
           : Image.network(
               url,
+              gaplessPlayback: true,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) => fallback(),

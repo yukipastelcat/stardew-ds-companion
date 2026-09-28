@@ -164,6 +164,7 @@ class InventorySlot extends StatelessWidget {
                   height: _qualityBadgeSize,
                   child: Image.network(
                     qualityStarUrl!,
+                    gaplessPlayback: true,
                     fit: BoxFit.contain,
                     filterQuality: FilterQuality.none,
                     errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -189,6 +190,7 @@ class InventorySlot extends StatelessWidget {
     }
     return Image.network(
       url,
+      gaplessPlayback: true,
       fit: BoxFit.fill,
       // Pixel art, not a photo — nearest-neighbor sampling keeps the
       // crop's hard edges instead of blurring them.
@@ -204,6 +206,7 @@ class InventorySlot extends StatelessWidget {
     }
     return Image.network(
       lockedOverlayUrl!,
+      gaplessPlayback: true,
       fit: BoxFit.fill,
       filterQuality: FilterQuality.none,
       errorBuilder: (context, error, stackTrace) => const DecoratedBox(decoration: BoxDecoration(color: Colors.black)),
@@ -214,6 +217,7 @@ class InventorySlot extends StatelessWidget {
     if (spriteUrl == null) return const SizedBox.shrink();
     return Image.network(
       spriteUrl!,
+      gaplessPlayback: true,
       fit: BoxFit.contain,
       filterQuality: FilterQuality.none,
       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),
@@ -341,6 +345,7 @@ class _WaterGauge extends StatelessWidget {
                   ? const SizedBox.shrink()
                   : Image.network(
                       frameUrl!,
+                      gaplessPlayback: true,
                       fit: BoxFit.fill,
                       filterQuality: FilterQuality.none,
                       errorBuilder: (context, error, stackTrace) => const SizedBox.shrink(),

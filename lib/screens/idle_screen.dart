@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// Shown on the home screen while the app is not yet connected to the
-/// game (autoconnecting, connecting, or errored out) — see [HomeScreen].
-/// Placeholder layout for now.
+/// A blank black screen, shown instead of the companion UI whenever there's
+/// nothing for it to show: not connected to the game / no save loaded, or
+/// the game is in a cutscene, sleeping, or on a loading screen
+/// (`GameState.idle`) — see [HomeScreen].
 class IdleScreen extends StatelessWidget {
   const IdleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(child: Text('Idle Screen'));
+    return const ColoredBox(color: Colors.black, child: SizedBox.expand());
   }
 }

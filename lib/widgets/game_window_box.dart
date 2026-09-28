@@ -51,6 +51,7 @@ class GameWindowBox extends StatelessWidget {
         Positioned.fill(
           child: Image.network(
             borderUrl!,
+            gaplessPlayback: true,
             centerSlice: const Rect.fromLTWH(20, 20, 20, 20),
             fit: BoxFit.fill,
             filterQuality: FilterQuality.none,

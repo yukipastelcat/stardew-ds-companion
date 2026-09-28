@@ -54,6 +54,7 @@ class _OrganizeButtonState extends State<OrganizeButton> {
         ? Icon(Icons.sort, size: widget.size, color: StardewColors.wood)
         : Image.network(
             widget.iconUrl!,
+            gaplessPlayback: true,
             width: widget.size,
             height: widget.size,
             // Without an explicit fit, Image doesn't stretch to the given

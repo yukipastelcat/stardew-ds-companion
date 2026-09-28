@@ -115,6 +115,7 @@ class _DragFeedback extends StatelessWidget {
             ? const Icon(Icons.drag_indicator, color: StardewColors.wood)
             : Image.network(
                 spriteUrl!,
+                gaplessPlayback: true,
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.none,
               ),

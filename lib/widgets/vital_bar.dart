@@ -387,6 +387,7 @@ class _Frame extends StatelessWidget {
     }
     return Image.network(
       url,
+      gaplessPlayback: true,
       height: height,
       width: double.infinity,
       fit: fit,
@@ -417,6 +418,7 @@ class _ExhaustedFace extends StatelessWidget {
     if (url == null) return const SizedBox.shrink();
     return Image.network(
       url!,
+      gaplessPlayback: true,
       width: width,
       fit: BoxFit.fitWidth,
       filterQuality: FilterQuality.none,

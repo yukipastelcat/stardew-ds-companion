@@ -71,52 +71,57 @@ class _CompanionScreenState extends State<CompanionScreen> {
               top: 0,
               left: 0,
               right: 0,
-              child: GameNavBar(
-                selectedIndex: _selectedIndex,
-                onSelected: (index) => setState(() => _selectedIndex = index),
-                destinations: [
-                  GameNavDestination(
-                    label: 'Backpack',
-                    fallbackIcon: Icons.backpack,
-                    iconUrl: widget.connection.iconUrl('backpack'),
-                  ),
-                  GameNavDestination(
-                    label: 'Skills',
-                    fallbackIcon: Icons.bar_chart,
-                    iconUrl: widget.connection.iconUrl('skills'),
-                    // Vanilla's own "skills" tab icon is a bare frame with
-                    // the player's mini portrait drawn on top separately —
-                    // see GameNavDestination.overlayIconUrl's doc comment.
-                    overlayIconUrl: widget.connection.miniPortraitUrl,
-                  ),
-                  GameNavDestination(
-                    label: 'Map',
-                    fallbackIcon: Icons.map,
-                    iconUrl: widget.connection.iconUrl('map'),
-                  ),
-                  GameNavDestination(
-                    label: 'Pets',
-                    fallbackIcon: Icons.pets,
-                    // CORRECTED twice now. First it pointed at a raw
-                    // "White Chicken" creature-sprite crop as the tab's
-                    // whole icon — no baked-in frame, unlike Backpack/
-                    // Map/Skills' own icons, so it read as the one
-                    // frameless tab (on the mistaken assumption vanilla
-                    // has no real GameMenu tab for Animals at all). A
-                    // second attempt tried to compensate by borrowing
-                    // Skills' own bare-frame crop as a backing and
-                    // compositing the chicken on top of it as an overlay
-                    // — closer, but still not the actual thing, and
-                    // called out as such. Vanilla 1.6 genuinely added its
-                    // own real "animals" GameMenu tab (confirmed by
-                    // reading the decompiled GameMenu.cs directly — see
-                    // UiIconCache's own doc comment for the citation), so
-                    // this now reads that real icon exactly the same
-                    // simple way Backpack/Map do — one direct `iconUrl`
-                    // crop, no overlay, no borrowed frame.
-                    iconUrl: widget.connection.iconUrl('animals-tab'),
-                  ),
-                ],
+              // Rebuilt on state pushes only for the Skills tab's mini
+              // portrait overlay, whose URL carries the portrait version.
+              child: ListenableBuilder(
+                listenable: widget.connection,
+                builder: (context, _) => GameNavBar(
+                  selectedIndex: _selectedIndex,
+                  onSelected: (index) => setState(() => _selectedIndex = index),
+                  destinations: [
+                    GameNavDestination(
+                      label: 'Backpack',
+                      fallbackIcon: Icons.backpack,
+                      iconUrl: widget.connection.iconUrl('backpack'),
+                    ),
+                    GameNavDestination(
+                      label: 'Skills',
+                      fallbackIcon: Icons.bar_chart,
+                      iconUrl: widget.connection.iconUrl('skills'),
+                      // Vanilla's own "skills" tab icon is a bare frame with
+                      // the player's mini portrait drawn on top separately —
+                      // see GameNavDestination.overlayIconUrl's doc comment.
+                      overlayIconUrl: widget.connection.miniPortraitUrl,
+                    ),
+                    GameNavDestination(
+                      label: 'Map',
+                      fallbackIcon: Icons.map,
+                      iconUrl: widget.connection.iconUrl('map'),
+                    ),
+                    GameNavDestination(
+                      label: 'Pets',
+                      fallbackIcon: Icons.pets,
+                      // CORRECTED twice now. First it pointed at a raw
+                      // "White Chicken" creature-sprite crop as the tab's
+                      // whole icon — no baked-in frame, unlike Backpack/
+                      // Map/Skills' own icons, so it read as the one
+                      // frameless tab (on the mistaken assumption vanilla
+                      // has no real GameMenu tab for Animals at all). A
+                      // second attempt tried to compensate by borrowing
+                      // Skills' own bare-frame crop as a backing and
+                      // compositing the chicken on top of it as an overlay
+                      // — closer, but still not the actual thing, and
+                      // called out as such. Vanilla 1.6 genuinely added its
+                      // own real "animals" GameMenu tab (confirmed by
+                      // reading the decompiled GameMenu.cs directly — see
+                      // UiIconCache's own doc comment for the citation), so
+                      // this now reads that real icon exactly the same
+                      // simple way Backpack/Map do — one direct `iconUrl`
+                      // crop, no overlay, no borrowed frame.
+                      iconUrl: widget.connection.iconUrl('animals-tab'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

@@ -134,6 +134,7 @@ class _WorldMap extends StatelessWidget {
           else
             Image.network(
               mapUrl!,
+              gaplessPlayback: true,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) =>
@@ -195,6 +196,7 @@ class _PlayerMarker extends StatelessWidget {
           ? const Icon(Icons.person, size: 30, color: StardewColors.textBrown)
           : Image.network(
               portraitUrl!,
+              gaplessPlayback: true,
               fit: BoxFit.contain,
               filterQuality: FilterQuality.none,
               errorBuilder: (context, error, stackTrace) =>

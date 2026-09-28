@@ -106,6 +106,9 @@ class GameState {
     this.goldenWalnuts = 0,
     this.qiGems = 0,
     this.doodleIcon = '',
+    this.portraitVersion = 0,
+    this.miniPortraitVersion = 0,
+    this.idle = false,
   });
 
   final String playerName;
@@ -292,6 +295,18 @@ class GameState {
   /// corner of the Skills page. Empty from an older mod build.
   final String doodleIcon;
 
+  /// Bumped by the mod each time it re-renders the player's portrait /
+  /// mini portrait (appearance changed). Put into those image URLs so a
+  /// new outfit or haircut isn't hidden behind the image cache — see
+  /// `GameConnectionService.portraitFrameUrl`. 0 from an older mod build.
+  final int portraitVersion;
+  final int miniPortraitVersion;
+
+  /// True while the game is in a cutscene, sleeping (the overnight
+  /// sequence), or on a loading/transition screen — the app blanks itself
+  /// to its black idle screen then. False from an older mod build.
+  final bool idle;
+
   factory GameState.fromJson(Map<String, dynamic> json) {
     final rawInventory = json['inventory'] as List<dynamic>? ?? const [];
 
@@ -362,6 +377,9 @@ class GameState {
       goldenWalnuts: json['goldenWalnuts'] as int? ?? 0,
       qiGems: json['qiGems'] as int? ?? 0,
       doodleIcon: json['doodleIcon'] as String? ?? '',
+      portraitVersion: json['portraitVersion'] as int? ?? 0,
+      miniPortraitVersion: json['miniPortraitVersion'] as int? ?? 0,
+      idle: json['idle'] as bool? ?? false,
     );
   }
 }

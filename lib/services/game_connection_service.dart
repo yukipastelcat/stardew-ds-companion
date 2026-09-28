@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
@@ -122,11 +123,37 @@ class GameConnectionService extends ChangeNotifier {
     }
   }
 
+  /// Newest not-yet-applied push, and the last one actually applied —
+  /// see [_onMessage].
+  String? _pendingRaw;
+  String? _lastAppliedRaw;
+  bool _applyScheduled = false;
+
+  /// Pushes can arrive faster than the display refreshes (the mod publishes
+  /// up to ~30/s while stats are ticking). Parsing and rebuilding the whole
+  /// companion UI for each one wasted frames and caused visible stutter, so
+  /// only the newest push is kept and applied once per frame, and a push
+  /// identical to the last applied one is dropped without a rebuild.
   void _onMessage(int generation, dynamic raw) {
     if (generation != _connectionGeneration) return; // stale socket, ignore
+    if (raw is! String) return;
+
+    _pendingRaw = raw;
+    if (_applyScheduled) return;
+    _applyScheduled = true;
+    SchedulerBinding.instance.scheduleFrameCallback((_) {
+      _applyScheduled = false;
+      final pending = _pendingRaw;
+      _pendingRaw = null;
+      if (pending != null) _applyMessage(pending);
+    });
+  }
+
+  void _applyMessage(String raw) {
+    if (raw == _lastAppliedRaw) return;
 
     try {
-      final json = jsonDecode(raw as String) as Map<String, dynamic>;
+      final json = jsonDecode(raw) as Map<String, dynamic>;
       if (json['connected'] == false) {
         // Mod is reachable but no save is loaded yet.
         _state = null;
@@ -141,6 +168,7 @@ class GameConnectionService extends ChangeNotifier {
       // Malformed push — ignore it, the next one will reconcile.
       return;
     }
+    _lastAppliedRaw = raw;
     notifyListeners();
   }
 
@@ -150,6 +178,8 @@ class GameConnectionService extends ChangeNotifier {
     _channelSubscription?.cancel();
     _channelSubscription = null;
     _channel = null;
+    _pendingRaw = null;
+    _lastAppliedRaw = null;
 
     _status = ConnectionStatus.error;
     _lastError = 'Could not reach the mod at localhost:$port — is the game running?';
@@ -221,7 +251,13 @@ class GameConnectionService extends ChangeNotifier {
   /// Null when not connected.
   String? get portraitUrl {
     if (_host == null) return null;
-    return Uri(scheme: 'http', host: _host!, port: port, path: '/portrait').toString();
+    return Uri(
+      scheme: 'http',
+      host: _host!,
+      port: port,
+      path: '/portrait',
+      queryParameters: {'v': '${_state?.portraitVersion ?? 0}'},
+    ).toString();
   }
 
   /// URL for walk-cycle frame [frame] (0-2) of the composited farmer sprite —
@@ -232,6 +268,10 @@ class GameConnectionService extends ChangeNotifier {
   ///
   /// [eyes] is the blink state — 0 open, 1 half closed, 4 closed, vanilla's
   /// own `Farmer.currentEyes` values (ignored by an older mod build).
+  ///
+  /// Carries `GameState.portraitVersion` as `v` (ignored by the mod):
+  /// images are cached by URL, so without it an appearance change would
+  /// never show up.
   String? portraitFrameUrl(int frame, {int eyes = 0}) {
     if (_host == null) return null;
     return Uri(
@@ -239,7 +279,7 @@ class GameConnectionService extends ChangeNotifier {
       host: _host!,
       port: port,
       path: '/portrait',
-      queryParameters: {'frame': '$frame', 'eyes': '$eyes'},
+      queryParameters: {'frame': '$frame', 'eyes': '$eyes', 'v': '${_state?.portraitVersion ?? 0}'},
     ).toString();
   }
 
@@ -253,7 +293,13 @@ class GameConnectionService extends ChangeNotifier {
   /// right at a small size. Null when not connected.
   String? get miniPortraitUrl {
     if (_host == null) return null;
-    return Uri(scheme: 'http', host: _host!, port: port, path: '/mini-portrait').toString();
+    return Uri(
+      scheme: 'http',
+      host: _host!,
+      port: port,
+      path: '/mini-portrait',
+      queryParameters: {'v': '${_state?.miniPortraitVersion ?? 0}'},
+    ).toString();
   }
 
   /// URL for the real background image the vanilla inventory menu draws

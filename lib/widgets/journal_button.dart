@@ -104,6 +104,7 @@ class _JournalButtonState extends State<JournalButton> with SingleTickerProvider
         ? Icon(Icons.menu_book, size: widget.size, color: StardewColors.wood)
         : Image.network(
             widget.iconUrl!,
+            gaplessPlayback: true,
             width: widget.size,
             height: widget.size,
             fit: BoxFit.contain,
@@ -161,6 +162,7 @@ class _JournalButtonState extends State<JournalButton> with SingleTickerProvider
                             )
                           : Image.network(
                               widget.pulseIconUrl!,
+                              gaplessPlayback: true,
                               fit: BoxFit.contain,
                               filterQuality: FilterQuality.none,
                               errorBuilder: (context, error, stackTrace) => const DecoratedBox(
