@@ -37,7 +37,14 @@ enum ConnectionStatus { disconnected, connecting, connected, error }
 /// quickly once it's back, and this is a fixed localhost connection,
 /// not a public service worth being gentle with.
 class GameConnectionService extends ChangeNotifier {
-  GameConnectionService({this.port = 8082});
+  /// [client] and [channelFactory] exist so tests can swap in a fake HTTP
+  /// client and WebSocket; the app itself uses the defaults.
+  GameConnectionService({
+    this.port = 8082,
+    http.Client? client,
+    WebSocketChannel Function(Uri uri)? channelFactory,
+  })  : _client = client ?? http.Client(),
+        _channelFactory = channelFactory ?? WebSocketChannel.connect;
 
   /// Must match `Port` in stardew-ds-mod/ModEntry.cs.
   final int port;
@@ -50,7 +57,8 @@ class GameConnectionService extends ChangeNotifier {
   static const _reconnectDelay = Duration(seconds: 2);
 
   String? _host;
-  final http.Client _client = http.Client();
+  final http.Client _client;
+  final WebSocketChannel Function(Uri uri) _channelFactory;
 
   WebSocketChannel? _channel;
   StreamSubscription<dynamic>? _channelSubscription;
@@ -91,7 +99,7 @@ class GameConnectionService extends ChangeNotifier {
     final uri = Uri(scheme: 'ws', host: _host!, port: port, path: '/ws');
 
     try {
-      final channel = WebSocketChannel.connect(uri);
+      final channel = _channelFactory(uri);
       _channel = channel;
 
       // `WebSocketChannel.connect` returns synchronously without

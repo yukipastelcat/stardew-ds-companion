@@ -13,6 +13,7 @@ submodule (`companion/`) of the umbrella `yukipastelcat/stardew-ds` repo.
 flutter pub get
 flutter analyze          # flutter_lints; android/ios/web/etc. are excluded
 flutter test             # unit + widget tests in test/ (mirrors lib/ layout)
+# CI also runs flutter analyze with infos fatal, so fix lints, don't ignore them
 flutter run              # needs a device/emulator
 flutter build apk --release
 ```
@@ -62,3 +63,20 @@ workflow only builds and attaches the APK.
 - Use `const` constructors and dispose controllers/listeners, as the
   existing widgets do.
 - The README is a stub; this file and the code comments are the docs.
+
+## Testing notes
+
+- `test/helpers/fake_websocket.dart` and `test/helpers/test_data.dart`
+  provide a fake mod socket and a `ConnectedService` harness.
+  `GameConnectionService` takes optional `client` and `channelFactory`
+  constructor arguments for this; the app uses the defaults.
+- State frames are applied in a scheduled frame callback, so after
+  emitting one call `pumpFrames(tester)` (two pumps).
+- Dispose the service **inside** the test body: `addTearDown` runs after
+  the framework's pending-timer check, and the service's reconnect timer
+  would trip it.
+- Widget tests render with the Ahem test font, so text is far wider than
+  in the real app; don't treat overflow at small window sizes as an app bug.
+- Three drag-and-drop tests in `draggable_inventory_slot_test.dart` are
+  skipped: the `Tooltip` in `InventorySlot` wins the long-press gesture
+  and stops `LongPressDraggable` from starting. Un-skip them when fixed.
