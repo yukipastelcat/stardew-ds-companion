@@ -12,10 +12,13 @@ submodule (`companion/`) of the umbrella `yukipastelcat/stardew-ds` repo.
 ```bash
 flutter pub get
 flutter analyze          # flutter_lints; android/ios/web/etc. are excluded
-flutter test             # no tests exist yet; add under test/ if you write some
+flutter test             # unit + widget tests in test/ (mirrors lib/ layout)
 flutter run              # needs a device/emulator
 flutter build apk --release
 ```
+
+`.github/workflows/tests.yml` runs `flutter analyze` and `flutter test` on
+every pull request; keep both green and add tests alongside new code.
 
 Release APK signing is only configured in CI
 (`.github/workflows/release.yml`, secrets `ANDROID_KEYSTORE_*`); don't
