@@ -30,7 +30,7 @@ class AnimalSummary {
 
   /// For a farm animal: species/breed string (e.g. "White Chicken",
   /// "Dairy Cow"), mirroring `FarmAnimal.type`. For a house pet: "Cat"
-  /// or "Dog" (or a modded pet type), with a "-<breed>" suffix for
+  /// or "Dog" (or a modded pet type), with a `-<breed>` suffix for
   /// non-default breeds (e.g. "Cat-1") — the mod's own `AnimalDto.Type`,
   /// mirroring `Pet.petType`/`Pet.whichBreed` (a `NetString` breed id,
   /// not a number, as of Stardew 1.6). Passed to
